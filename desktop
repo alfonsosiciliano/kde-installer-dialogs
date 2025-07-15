@@ -78,6 +78,6 @@ bsddialog --sleep 5 --backtitle "FreeBSD Installer" --title "Desktop" \
 
 bsddialog --backtitle "FreeBSD Installer" --title "Desktop" \
 	--ok-label Continue --cancel-label Skip \
-	--checklist 'Select the users to add to the "video" group to enable them to use the graphical environment.' 0 0 0 \
+	--checklist 'Select users to add to the "video" group for 3D acceleration.' 0 0 0 \
 	alice "Alice Crypto" off bob "Robert Protocol" off luigi "Luigi Plumber" on mario "Super Mario Bross" on zelda "Zelda, The Legend of" off
 
