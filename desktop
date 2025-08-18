@@ -41,8 +41,8 @@ readonly BSDDIALOG_YES=$BSDDIALOG_OK
 ###
 
 # SECTION 0
-bsddialog --backtitle "FreeBSD Installer" --title "Desktop" \
-	--yesno "Do you want to set up a Graphical Desktop Environment?" 0 0
+bsddialog --backtitle "FreeBSD Installer" --title "Desktop" --colors \
+	--yesno "FreeBSD provides a variety of graphical environments that can be easily installed through ports and packages. Please refer to the FreeBSD Handbook available at \Zuhttps://docs.freebsd.org\Zn.\n\nWould you like to install KDE Plasma now and start it at the next system reboot?" 0 0
 rv=$? ; [ $rv -ne $BSDDIALOG_YES ] && exit $rv
 
 # SECTION 1: Graphic card
