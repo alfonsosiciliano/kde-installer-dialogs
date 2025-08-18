@@ -33,19 +33,18 @@ readonly BSDDIALOG_OK=0
 readonly BSDDIALOG_YES=$BSDDIALOG_OK
 
 ###
-# 1. Yes-No question: "Do you want to install KDE?"
+# 1. Yes-No question to install KDE.
 # 2. Radiolist GPU drivers, default item based on the output of fwget -n -q.
-# 3. Yes-No question: "Do you want install KDE Plasma?"
-# 4. Mixedgauge for installation progress: GPU driver, Xorg, KDE, and conf.
-# 5. Checklist to select user(s) to add to the video group.
+# 3. Mixedgauge for installation progress: GPU driver, Xorg, KDE, and conf.
+# 4. Checklist to select user(s) to add to the video group.
 ###
 
-# SECTION 0
+# SECTION 1
 bsddialog --backtitle "FreeBSD Installer" --title "Desktop" --colors \
 	--yesno "FreeBSD provides a variety of graphical environments that can be easily installed through ports and packages. Refer to the FreeBSD Handbook available at \Zuhttps://docs.freebsd.org\Zn.\n\nWould you like to install KDE Plasma now and start it at the next system reboot? Please note this is an experimental feature." 0 0
 rv=$? ; [ $rv -ne $BSDDIALOG_YES ] && exit $rv
 
-# SECTION 1: Graphic card
+# SECTION 2: Graphic card
 HELPGPU="System firmware boot method: `sysctl -n machdep.bootmethod`
 GPU:
 `pciconf -lv | grep -A 4 vga`"
@@ -66,8 +65,7 @@ gpu=$(bsddialog --backtitle "FreeBSD Installer" --title "Desktop" \
 	3>&1 1>&2 2>&3 3>&-)
 [ $? -ne $BSDDIALOG_OK ] && gpu=""
 
-# SECTION 3: installation
-
+# SECTION 3: Installation
 bsddialog --sleep 5 --backtitle "FreeBSD Installer" --title "Desktop" \
 	--mixedgauge "\nInstallation 450/512 kscreen\n" 0 0 40 \
 	"" " -9" \
@@ -76,6 +74,7 @@ bsddialog --sleep 5 --backtitle "FreeBSD Installer" --title "Desktop" \
 	"Configuration"	" -11 "
 
 
+# SECTION 4: Video group
 bsddialog --backtitle "FreeBSD Installer" --title "Desktop" \
 	--ok-label Continue --cancel-label Skip \
 	--checklist 'Select users to add to the "video" group for 3D acceleration.' 0 0 0 \
