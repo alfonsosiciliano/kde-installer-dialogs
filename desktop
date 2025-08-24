@@ -35,7 +35,7 @@ readonly BSDDIALOG_YES=$BSDDIALOG_OK
 ####
 # 1. Yes-No question to install KDE.
 # 2. Radiolist GPU drivers.
-# 3. Installation progress: GPU driver, Xorg, KDE, and conf.
+# 3. Installation progress: GPU driver, Xorg, KDE, sddm, and conf.
 # 4. Checklist to select users to add to the video group.
 ####
 
