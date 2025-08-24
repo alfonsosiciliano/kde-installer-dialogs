@@ -102,7 +102,7 @@ case $gpu in
 		;;
 esac
 
-if [ $gpu == NVIDIA -o $optimus ]; then
+if [ $gpu = NVIDIA -o $optimus ]; then
 	items='Untested NVIDIA-550 "Proprietary driver version 550" off'
 	if [ $optimus ]; then
 		items="$items "'"" NVIDIA-390 "Proprietary driver version 390" off'
@@ -132,7 +132,7 @@ if [ $gpu == NVIDIA -o $optimus ]; then
 			fi
 		fi
 		if [ $version -le 340 ]; then
-			if [ $INSTALLFUNC == install_pkgs ]; then
+			if [ $INSTALLFUNC = install_pkgs ]; then
 				$DIALOG --title "${TITLE}" --ok-label Quit \
 					--msgbox "The driver nvidia-driver-$version can be installed only via PORTS, restart $0 with -P option." 0 0
 				log "Cannot install nvidia-driver-$version via pkg, restart $0 with -P option"
@@ -155,7 +155,7 @@ bsddialog --sleep 5 --backtitle "FreeBSD Installer" --title "Desktop" \
 
 
 # SECTION 4: Video group
-[ $gpu == VESA -o $gpu == SCFB ] && exit 0
+[ $gpu = VESA -o $gpu = SCFB ] && exit 0
 
 users=`pw usershow -a | awk -F":" '$10 != "" && $10 != "/usr/sbin/nologin"{print $1 " \""$8"\" off"}' | sort`
 echo ${users} | xargs -o bsddialog --backtitle "FreeBSD Installer" \
