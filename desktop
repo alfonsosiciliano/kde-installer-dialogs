@@ -158,7 +158,9 @@ bsddialog --sleep 5 --backtitle "FreeBSD Installer" --title "Desktop" \
 [ $gpu = VESA -o $gpu = SCFB ] && exit 0
 
 users=`pw usershow -a | awk -F":" '$10 != "" && $10 != "/usr/sbin/nologin"{print $1 " \""$8"\" off"}' | sort`
-echo ${users} | xargs -o bsddialog --backtitle "FreeBSD Installer" \
-	--title "Desktop" --ok-label Continue --cancel-label Skip \
-	--checklist 'Select users to add to the "video" group for 3D acceleration.' 0 0 0
 
+exec 5>&1
+USERS=$(echo ${users} | xargs -o bsddialog --backtitle "FreeBSD Installer" \
+	--title "Desktop" --ok-label Continue --cancel-label Skip \
+	--checklist 'Select users to add to the "video" group for 3D acceleration.' 0 0 0 2>&1 1>&5)
+exec 5>&-
