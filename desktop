@@ -34,7 +34,7 @@ readonly BSDDIALOG_YES=$BSDDIALOG_OK
 
 ###
 # 1. Yes-No question to install KDE.
-# 2. Radiolist GPU drivers, default item based on the output of fwget -n -q.
+# 2. Radiolist GPU drivers.
 # 3. Installation progress: GPU driver, Xorg, KDE, and conf.
 # 4. Checklist to select users to add to the video group.
 ###
@@ -56,6 +56,7 @@ GPU:
 Detected firmware package: $PKGGPU"
 # end F1 help message
 
+# TOD: add auto detection, via pciconf -lv and fwget -n -q
 gpu=$(bsddialog --backtitle "FreeBSD Installer" --title "Desktop" \
 	--ok-label Install --cancel-label Skip \
 	--hmsg  "$HELPGPU" --item-depth \
