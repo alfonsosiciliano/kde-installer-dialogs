@@ -154,7 +154,7 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 fi
 
 # SECTION 3: Installation
-bsddialog --sleep 5 --backtitle "FreeBSD Installer" --title "Desktop" \
+bsddialog --sleep 1 --backtitle "FreeBSD Installer" --title "Desktop" \
 	--mixedgauge "\nInstallation 450/512 kscreen\n" 0 0 40 \
 	"" " -9" \
 	"GPU driver" " -6" \
@@ -170,8 +170,11 @@ users=`pw usershow -a | awk -F":" '$10 != "" && $10 != "/usr/sbin/nologin"{print
 
 exec 5>&1
 USERS=$(echo ${users} | xargs -o bsddialog --backtitle "FreeBSD Installer" \
-	--title "Desktop" --ok-label Continue --cancel-label Skip \
+	--title "Desktop" --ok-label Add --cancel-label Skip \
 	--checklist 'Select users to add to the "video" group for 3D acceleration.' 0 0 0 2>&1 1>&5)
 exec 5>&-
+[ $? -ne $BSDDIALOG_OK ] && exit 1
 
-# TODO: add pw add to video group
+if [ -n "$USERS" ] ; then
+	pw groupmod video -m `echo "$USERS" | tr ' ' ','`
+fi
