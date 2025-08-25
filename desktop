@@ -159,7 +159,6 @@ install_pkgs () {
 	local packages=$@
 	local unistalled deps curr total
 
-	#to delete?
 	if [ "$RELEASE" == "CURRENT" ]; then
 		bsddialog --backtitle "FreeBSD Installer" --title Desktop \
 		--infobox "This system is CURRENT,\nrunning \"pkg update\"" 0 0
@@ -198,6 +197,7 @@ install_pkgs () {
 		--yesno "Do you want to install:\n\n$packages?" 0 0
 	[ $? -ne $BSDDIALOG_YES ] && return $BSDDIALOG_NO
 
+	# Mixedgauge?
 	total=`echo $packages | awk '{print split($0, a)}'`
 	curr=1
 	for package in $packages
