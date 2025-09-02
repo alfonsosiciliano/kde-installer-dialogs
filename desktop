@@ -33,6 +33,8 @@ readonly BSDDIALOG_OK=0
 readonly BSDDIALOG_YES=$BSDDIALOG_OK
 readonly BSDDIALOG_NO=1
 
+readonly XDRIVERFILE=/usr/local/etc/X11/xorg.conf.d/20-installerdriver.conf
+
 ####
 # 1. Yes-No question to install KDE.
 # 2. Radiolist GPU drivers.
