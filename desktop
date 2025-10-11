@@ -157,7 +157,7 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 fi
 
 #### SECTION 3: Installation ####
-install_pkgs () {
+install_pkgs_fast () {
 	local packages=$@
 	local curr total
 
@@ -169,7 +169,6 @@ install_pkgs () {
 	# Dependencies
 	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
 		--infobox "Finding uninstalled dependencies, could take a while.\n\n$packages" 0 0
-	#packages=$(pkg install -n $packages 2>/dev/null | awk '/^New packages to be INSTALLED:/{flag=1;next} /^Installed packages to be UPGRADED:/{flag=0} flag && /^[[:space:]]*[A-Za-z0-9_.+-]/ {sub(/:.*/,""); print $1}')
 		packages=$(
 		pkg install -n $packages 2>/dev/null |
 		awk '
@@ -179,6 +178,51 @@ install_pkgs () {
 				sub(/:.*/,""); print $1
 			}'
 	)
+
+	# Installation
+	if [ -z "$packages" ]; then
+		bsddialog --backtitle "FreeBSD Installer" --title Desktop \
+			--ok-label Close \
+			--msgbox "All requested packages already installed" 0 0
+		return BSDDIALOG_OK
+	fi
+	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
+		--yesno "Do you want to install:\n\n$packages?" 0 0
+	[ $? -ne $BSDDIALOG_YES ] && return $BSDDIALOG_NO
+	pkg install -y -n $@
+
+}
+
+install_pkgs_slow () {
+	local packages=$@
+	local unistalled deps curr total
+
+	if [ "$RELEASE" == "CURRENT" ]; then
+		bsddialog --backtitle "FreeBSD Installer" --title Desktop \
+		--infobox "This system is CURRENT,\nrunning \"pkg update\"" 0 0
+		yes | pkg update
+	fi
+	# Dependencies
+	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
+		--infobox "Finding uninstalled dependencies, could take a while.\n\n$packages" 0 0
+	unistalled=""
+	while [ "$packages" ]
+	do
+		deps=""
+		for p in $packages
+		do
+			echo "$unistalled" | grep -w $p >> /dev/null
+			[ $? -ne 1 ] && continue # already in the list
+
+			pkg info -e $p
+			[ $? -eq 0 ] && continue # already installed
+
+			unistalled="$p $unistalled"
+			deps="`pkg rquery %dn $p` $deps"
+		done
+		packages="$deps"
+	done
+	packages="$unistalled"
 
 	# Installation
 	if [ -z "$packages" ]; then
@@ -200,7 +244,7 @@ install_pkgs () {
 		echo XXX
 		echo $perc
 		echo "[$curr/$total] Download/Install $package"
-		pkg install -U -y $package
+		pkg install -y -n $package >>/dev/null
 		echo XXX
 		if [ $curr -eq $total ]; then
 			echo EOF
@@ -209,7 +253,15 @@ install_pkgs () {
 	done | bsddialog --backtitle "FreeBSD Installer" --title Desktop --gauge "Install $total package(s)" 10 60 0
 }
 
-install_pkgs $toinstall xorg kde sddm
+installfunc=install_pkgs_slow
+bsddialog --backtitle "FreeBSD Installer" --title Desktop \
+	--ok-label "CLI (fast)" --cancel-label "TUI (slow)" \
+	--yesno "Do you want to watch the installation via CLI (fast) or TUI (slow because the script builds the dependency hierarchy on its own, taking a bit more than a minute)?" \
+	0 0
+	[ $? -eq $BSDDIALOG_YES ] && installfunc=install_pkgs_fast
+	
+
+#$installfunc $toinstall xorg kde sddm
 [ $? -ne $BSDDIALOG_OK ] && exit 1
 
 bsddialog --backtitle "FreeBSD Installer" --title Desktop --infobox "Setting DE..." 0 0
