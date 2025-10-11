@@ -217,7 +217,7 @@ install_pkgs () {
 	done | bsddialog --backtitle "FreeBSD Installer" --title Desktop --gauge "Install $total package(s)" 10 60 0
 }
 
-install_pkgs -y $toinstall xorg kde sddm
+install_pkgs $toinstall xorg kde sddm
 [ $? -ne $BSDDIALOG_OK ] && exit 1
 
 bsddialog --backtitle "FreeBSD Installer" --title Desktop --infobox "Setting DE..." 0 0
