@@ -159,7 +159,7 @@ fi
 #### SECTION 3: Installation ####
 install_pkgs () {
 	local packages=$@
-	local unistalled deps curr total
+	local curr total
 
 	if [ "$RELEASE" == "CURRENT" ]; then
 		bsddialog --backtitle "FreeBSD Installer" --title Desktop \
@@ -169,24 +169,7 @@ install_pkgs () {
 	# Dependencies
 	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
 		--infobox "Finding uninstalled dependencies, could take a while.\n\n$packages" 0 0
-	unistalled=""
-	while [ "$packages" ]
-	do
-		deps=""
-		for p in $packages
-		do
-			echo "$unistalled" | grep -w $p >> /dev/null
-			[ $? -ne 1 ] && continue # already in the list
-
-			pkg info -e $p
-			[ $? -eq 0 ] && continue # already installed
-
-			unistalled="$p $unistalled"
-			deps="`pkg rquery %dn $p` $deps"
-		done
-		packages="$deps"
-	done
-	packages="$unistalled"
+	packages=$(pkg install -n $packages 2>/dev/null | awk '/^New packages to be INSTALLED:/{flag=1;next} /^Installed packages to be UPGRADED:/{flag=0} flag && /^[[:space:]]*[A-Za-z0-9_.+-]/ {sub(/:.*/,""); print $1}')
 
 	# Installation
 	if [ -z "$packages" ]; then
