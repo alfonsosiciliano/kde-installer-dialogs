@@ -189,7 +189,7 @@ install_pkgs_fast () {
 	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
 		--yesno "Do you want to install:\n\n$packages?" 0 0
 	[ $? -ne $BSDDIALOG_YES ] && return $BSDDIALOG_NO
-	pkg install -y -n $@
+	pkg install -y $@
 
 }
 
@@ -244,7 +244,7 @@ install_pkgs_slow () {
 		echo XXX
 		echo $perc
 		echo "[$curr/$total] Download/Install $package"
-		pkg install -y -n $package >>/dev/null
+		pkg install -y $package >>/dev/null
 		echo XXX
 		if [ $curr -eq $total ]; then
 			echo EOF
@@ -261,7 +261,7 @@ bsddialog --backtitle "FreeBSD Installer" --title Desktop \
 	[ $? -eq $BSDDIALOG_YES ] && installfunc=install_pkgs_fast
 	
 
-#$installfunc $toinstall xorg kde sddm
+$installfunc $toinstall xorg kde sddm
 [ $? -ne $BSDDIALOG_OK ] && exit 1
 
 bsddialog --backtitle "FreeBSD Installer" --title Desktop --infobox "Setting DE..." 0 0
