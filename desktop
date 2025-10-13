@@ -104,11 +104,11 @@ case $gpu in
 		postconfig="sysrc kld_list+=\" radeonkms\""
 		;;
 	VESA)
-		toinstall="$toinstall x11-drivers/xf86-video-vesa"
+		toinstall="$toinstall xf86-video-vesa"
 		postconfig="echo -e \"Section \\\"Device\\\"\n\tIdentifier \\\"Card0\\\"\n\tDriver \\\"vesa\\\"\nEndSection\" >> $XDRIVERFILE"
 		;;
 	SCFB)
-		toinstall="$toinstall x11-drivers/xf86-video-scfb"
+		toinstall="$toinstall xf86-video-scfb"
 		postconfig="echo -e \"Section \\\"Device\\\"\n\tIdentifier \\\"Card0\\\"\n\tDriver \\\"scfb\\\"\nEndSection\" >> $XDRIVERFILE"
 		;;
 esac
