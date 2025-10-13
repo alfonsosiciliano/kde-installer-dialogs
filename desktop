@@ -79,36 +79,35 @@ gpu=$(bsddialog --backtitle "FreeBSD Installer" --title "Desktop" \
 
 toinstall=""
 postconfig=""
-
 case $gpu in
 	DRM )
-		toinstall="$toinstall graphics/drm-kmod"
+		toinstall="drm-kmod"
 		postconfig="echo kld_list=\"i915kms amdgpu radeonkms\""
 		;;
 	Optimus-Intel)
 		optimus=1
 		;&
 	Intel)
-		toinstall="$toinstall graphics/drm-kmod x11-drivers/xf86-video-intel"
+		toinstall="drm-kmod"
 		postconfig="echo kld_list=\"i915kms\""
 		;;
 	Optimus-AMD)
 		optimus=1
 		;&
 	AMD)
-		toinstall="$toinstall graphics/drm-kmod"
+		toinstall="drm-kmod"
 		postconfig="echo kld_list=\"amdgpu\""
 		;;
 	Radeon )
-		toinstall="$toinstall graphics/drm-kmod"
+		toinstall="drm-kmod"
 		postconfig="echo kld_list=\"radeonkms\""
 		;;
 	VESA)
-		toinstall="$toinstall xf86-video-vesa"
+		toinstall="xf86-video-vesa"
 		postconfig="echo -e \"Section \\\"Device\\\"\n\tIdentifier \\\"Card0\\\"\n\tDriver \\\"vesa\\\"\nEndSection\" >> $XDRIVERFILE"
 		;;
 	SCFB)
-		toinstall="$toinstall xf86-video-scfb"
+		toinstall="xf86-video-scfb"
 		postconfig="echo -e \"Section \\\"Device\\\"\n\tIdentifier \\\"Card0\\\"\n\tDriver \\\"scfb\\\"\nEndSection\" >> $XDRIVERFILE"
 		;;
 esac
