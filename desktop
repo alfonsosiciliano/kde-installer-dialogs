@@ -160,7 +160,7 @@ fi
 readonly CONTINUE=0
 readonly END=1
 
-install_pkgs_fast () {
+install_pkgs () {
 	local packages=$@
 	local curr total
 
@@ -192,75 +192,7 @@ install_pkgs_fast () {
 	return $CONTINUE
 }
 
-install_pkgs_slow () {
-	local packages=$@
-	local unistalled deps curr total
-
-	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
-		--infobox "pkg update" 0 0
-	ASSUME_ALWAYS_YES=yes pkg update
-
-	# Dependencies
-	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
-		--infobox "Finding uninstalled dependencies, could take a while.\n\n$packages" 0 0
-	unistalled=""
-	while [ "$packages" ]
-	do
-		deps=""
-		for p in $packages
-		do
-			echo "$unistalled" | grep -w $p >> /dev/null
-			[ $? -ne 1 ] && continue # already in the list
-
-			pkg info -e $p
-			[ $? -eq 0 ] && continue # already installed
-
-			unistalled="$p $unistalled"
-			deps="`pkg rquery %dn $p` $deps"
-		done
-		packages="$deps"
-	done
-	packages="$unistalled"
-
-	# Installation
-	if [ -z "$packages" ]; then
-		bsddialog --backtitle "FreeBSD Installer" --title Desktop \
-			--ok-label Close \
-			--msgbox "All requested packages already installed" 0 0
-		return $END
-	fi
-	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
-		--yesno "Do you want to install:\n\n$packages?" 0 0
-	[ $? -ne $BSDDIALOG_YES ] && return $END
-
-	# Mixedgauge?
-	total=`echo $packages | awk '{print split($0, a)}'`
-	curr=1
-	for package in $packages
-	do
-		perc="$(expr $(expr $curr "*" 100 ) "/" $total )"
-		echo XXX
-		echo $perc
-		echo "[$curr/$total] Download/Install $package"
-		pkg install -y $package >>/dev/null
-		echo XXX
-		if [ $curr -eq $total ]; then
-			echo EOF
-		fi
-		curr=`expr $curr + 1`
-	done | bsddialog --backtitle "FreeBSD Installer" --title Desktop --gauge "Install $total package(s)" 10 60 0
-	return $CONTINUE
-}
-
-installfunc=install_pkgs_slow
-bsddialog --backtitle "FreeBSD Installer" --title Desktop \
-	--ok-label "CLI (fast)" --cancel-label "TUI (slow)" \
-	--yesno "Do you want to watch the installation via CLI (fast) or TUI (slow because the script builds the dependency hierarchy on its own, taking a bit more than a minute)?" \
-	0 0
-	[ $? -eq $BSDDIALOG_YES ] && installfunc=install_pkgs_fast
-	
-
-$installfunc $toinstall xorg kde sddm
+install_pkgs $toinstall xorg kde sddm
 [ $? -ne $CONTINUE ] && exit 0
 
 bsddialog --backtitle "FreeBSD Installer" --title Desktop --infobox "Setting DE..." 0 0
