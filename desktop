@@ -80,7 +80,7 @@ gpu=$(bsddialog --backtitle "FreeBSD Installer" --title "Desktop" \
 toinstall=""
 postconfig=""
 case $gpu in
-	DRM )
+	DRM)
 		toinstall="drm-kmod"
 		postconfig="echo kld_list=\"i915kms amdgpu radeonkms\" >> /etc/rc.conf"
 		;;
@@ -98,7 +98,7 @@ case $gpu in
 		toinstall="drm-kmod"
 		postconfig="echo kld_list=\"amdgpu\" >> /etc/rc.conf"
 		;;
-	Radeon )
+	Radeon)
 		toinstall="drm-kmod"
 		postconfig="echo kld_list=\"radeonkms\" >> /etc/rc.conf"
 		;;
