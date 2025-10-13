@@ -71,7 +71,7 @@ gpu=$(bsddialog --backtitle "FreeBSD Installer" --title "Desktop" \
 	0 NVIDIA        "Proprietary driver "                            off \
 	1 Optimus-Intel "Nvidia Optimus and Intel GPU"                   off \
 	1 Optimus-AMD   "Nvidia Optimus and AMD GPU"                     off \
-	0 VirtualBox    "Oracle VirtualBox Guest Additions"              off \
+	0 VirtualBox    "Oracle VirtualBox (only FreeBSD 14.3)"          off \
 	0 VESA          "GPU not supported by other drivers (BIOS)"      off \
 	0 SCFB          "GPU not supported by other drivers (UEFI)"      off \
 	3>&1 1>&2 2>&3 3>&-)
@@ -209,8 +209,14 @@ echo "# KDE set up" >> /etc/sysctl.conf
 echo "net.local.stream.recvspace=65536" >> /etc/sysctl.conf
 echo "net.local.stream.sendspace=65536" >> /etc/sysctl.conf
 
+if [ $gpu = VirtualBox ]; then
+	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
+	--msgbox "Select VBoxSVGA as the graphics controller in the VirtualBox settings." \
+	0 0
+fi
+
 #### SECTION 4: Video group ####
-[ $gpu = VESA -o $gpu = SCFB ] && exit 0
+[ $gpu = VESA -o $gpu = SCFB -o $gpu = VirtualBox ] && exit 0
 
 users=`pw usershow -a | awk -F":" '$10 != "" && $10 != "/usr/sbin/nologin"{print $1 " \""$8"\" off"}' | sort`
 
