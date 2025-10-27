@@ -161,43 +161,9 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 fi
 
 #### SECTION 3: Installation ####
-readonly CONTINUE=0
-readonly END=1
-
-install_pkgs () {
-	local packages=$@
-	local curr total
-
-	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
-		--infobox "pkg update" 0 0
-	ASSUME_ALWAYS_YES=yes pkg update
-
-	# Dependencies
-	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
-		--infobox "Finding uninstalled dependencies, could take a while.\n\n$packages" 0 0
-		packages=$(pkg install -n $packages 2>/dev/null |
-			awk '/^New packages to be INSTALLED:/ {flag=1; next}
-			flag && NF==0 {exit}
-			flag && /^[[:space:]]*[A-Za-z0-9_.+-]/ {
-				sub(/:.*/,""); print $1
-			}')
-
-	# Installation
-	if [ -z "$packages" ]; then
-		bsddialog --backtitle "FreeBSD Installer" --title Desktop \
-			--ok-label Close \
-			--msgbox "All requested packages already installed" 0 0
-		return $END
-	fi
-	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
-		--yesno "Do you want to install:\n\n$packages?" 0 0
-	[ $? -ne $BSDDIALOG_YES ] && return $END
-	pkg install -y $@
-	return $CONTINUE
-}
-
-install_pkgs $toinstall xorg kde sddm
-[ $? -ne $CONTINUE ] && exit 0
+ASSUME_ALWAYS_YES=yes pkg update
+pkg install $toinstall xorg kde sddm
+[ $? -ne 0 ] && exit 0
 
 bsddialog --backtitle "FreeBSD Installer" --title Desktop --infobox "Setting DE..." 0 0
 # sysrc not a pkgbase minimal installation
