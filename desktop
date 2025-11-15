@@ -180,7 +180,7 @@ echo "net.local.stream.sendspace=65536" >> /etc/sysctl.conf
 
 if [ $gpu = VirtualBox ]; then
 	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
-	--msgbox "Select VBoxSVGA as the graphics controller in the VirtualBox settings." \
+	--msgbox "Select VBoxSVGA as the graphics controller in the VirtualBox settings. And do not enable 3D acceleration." \
 	0 0
 fi
 
