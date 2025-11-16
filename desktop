@@ -194,6 +194,10 @@ if [ $gpu != VESA -a $gpu != SCFB -a $gpu != VirtualBox ]; then
 	pw groupmod video -m `echo "$USERS" | tr ' ' ','`
 fi
 
+if [ $gpu = VirtualBox ]; then
+	pw groupmod wheel -m `echo "$USERS" | tr ' ' ','`
+fi
+
 gen_autostart_entry() {
 	cat <<EOF
 [Desktop Entry]
