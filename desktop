@@ -43,7 +43,7 @@ readonly XDRIVERFILE=/usr/local/etc/X11/xorg.conf.d/20-installerdriver.conf
 ####
 
 #### SECTION 1 ####
-bsddialog --backtitle "FreeBSD Installer" --title "Desktop" --colors \
+bsddialog --backtitle "FreeBSD Installer" --title Desktop --colors \
 	--yesno "FreeBSD provides a variety of graphical environments that can be easily installed through ports and packages. Refer to the FreeBSD Handbook available at \Zuhttps://docs.freebsd.org\Zn.\n\nWould you like to install KDE Plasma now and start it at the next system reboot? Please note this is an experimental feature." 0 0
 [ $? -ne $BSDDIALOG_YES ] && exit 1
 
@@ -60,9 +60,9 @@ Detected firmware package: $PKGGPU"
 # ...end F1 help message
 
 # TODO: add auto detection, via pciconf -lv and fwget -n -q
-gpu=$(bsddialog --backtitle "FreeBSD Installer" --title "Desktop" \
+gpu=$(bsddialog --backtitle "FreeBSD Installer" --title Desktop \
 	--ok-label Install --cancel-label Skip \
-	--hmsg  "$HELPGPU" --item-depth \
+	--hmsg "$HELPGPU" --item-depth \
 	--radiolist "F1 to know your GPU, SPACE to select a driver:" 0 0 0 \
 	0 DRM           "Intel and AMD Metaport"                         off \
 	1 Intel         "Intel APUs starting with HD3000 / Sandy Bridge" off \
@@ -121,9 +121,9 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 	Untested nvidia-driver-340 'Old proprietary driver version 340' off \
 	Untested nvidia-driver-304 'Old proprietary driver version 304' off"
 
-	gpu=$(echo $items | xargs -o bsddialog --title Desktop \
-		--ok-label Install --cancel-label Skip --hmsg "$HELPGPU" \
-		--item-prefix \
+	gpu=$(echo $items | xargs -o bsddialog --backtitle "FreeBSD Installer" \
+		--title Desktop --ok-label Install --cancel-label Skip \
+		--hmsg "$HELPGPU" --item-prefix \
 		--radiolist "F1 to know your GPU and which driver supports it. SPACE to select a driver." \
 		0 0 0 \
 	3>&1 1>&2 2>&3 3>&-)
