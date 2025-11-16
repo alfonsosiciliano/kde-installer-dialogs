@@ -130,10 +130,11 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 	[ $? -ne $BSDDIALOG_OK -o -z $gpu ] && exit 0
 
 	toinstall="$toinstall $gpu"
-	version=${gpu##NVIDIA-}
-	if [ $version = drm-kmod ]; then
+	version=${gpu##nvidia-driver-}
+	# refactor importing to bsdinstall
+	if [ $version = "nvidia-drm-kmod" ]; then
 		kmod=nvidia-drm
-	elif [ $version -ge 390 ]
+	elif [ $version -ge 390 ]; then
 		kmod=nvidia-modeset
 	else
 		# 304 and 340.
