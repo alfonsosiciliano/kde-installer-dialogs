@@ -47,6 +47,12 @@ bsddialog --backtitle "FreeBSD Installer" --title Desktop --colors \
 	--yesno "FreeBSD provides a variety of graphical environments that can be easily installed through ports and packages. Refer to the FreeBSD Handbook available at \Zuhttps://docs.freebsd.org\Zn.\n\nWould you like to install KDE Plasma now and start it at the next system reboot? Please note this is an experimental feature." 0 0
 [ $? -ne $BSDDIALOG_YES ] && exit 1
 
+if [ -z `hostname` ]; then
+	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
+	--ok-label Exit --msgbox "Please set a hostname." 0 0
+	exit 1
+fi
+
 #### SECTION 2: Graphic card ####
 PKGGPU=`fwget -n -q | grep gpu`
 BOOTMETHOD=`sysctl -n machdep.bootmethod`
