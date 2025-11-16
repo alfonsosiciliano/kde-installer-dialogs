@@ -202,22 +202,22 @@ EOF
 if [ -n "$USERS" ] ; then
 	pw groupmod video -m `echo "$USERS" | tr ' ' ','`
 	for u in $USERS; do
-  		user_home="$(pw usershow ${u} | awk -F: '{print $(NF-1)}')"
-  		user_config_dir="/mnt/${user_home}/.config"
-  		mkdir -p "${user_config_dir}/autostart"
-  		gen_autostart_entry \
-  			'PipeWire Media System' \
-  			'Start the PipeWire Media System' \
-  			pipewire > "${user_config_dir}/autostart/pipewire.desktop"
-  		gen_autostart_entry \
-  			'PipeWire PulseAudio replacement' \
-  			'Start the PulseAudio-compatible PipeWire daemon' \
-  			pipewire-pulse > "${user_config_dir}/autostart/pipewire-pulse.desktop"
-  		gen_autostart_entry \
-  			'PulseAudio Sound System' \
-  			'Start the PulseAudio Sound System' \
-  			'start-pulseaudio-x11' \
-  			'Hidden=true' > "${user_config_dir}/autostart/pulseaudio.desktop"
-  		chown -R ${u}:${u} "${user_config_dir}"
-  	done
+		user_home="$(pw usershow ${u} | awk -F: '{print $(NF-1)}')"
+		user_config_dir="/mnt/${user_home}/.config"
+		mkdir -p "${user_config_dir}/autostart"
+		gen_autostart_entry \
+			'PipeWire Media System' \
+			'Start the PipeWire Media System' \
+			pipewire > "${user_config_dir}/autostart/pipewire.desktop"
+		gen_autostart_entry \
+			'PipeWire PulseAudio replacement' \
+			'Start the PulseAudio-compatible PipeWire daemon' \
+			pipewire-pulse > "${user_config_dir}/autostart/pipewire-pulse.desktop"
+		gen_autostart_entry \
+			'PulseAudio Sound System' \
+			'Start the PulseAudio Sound System' \
+			'start-pulseaudio-x11' \
+			'Hidden=true' > "${user_config_dir}/autostart/pulseaudio.desktop"
+		chown -R ${u}:${u} "${user_config_dir}"
+	done
 fi
