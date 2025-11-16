@@ -61,7 +61,7 @@ Detected firmware package: $PKGGPU"
 
 # TODO: add auto detection, via pciconf -lv and fwget -n -q
 gpu=$(bsddialog --backtitle "FreeBSD Installer" --title Desktop \
-	--ok-label Install --cancel-label Skip \
+	--ok-label Install --cancel-label Exit \
 	--hmsg "$HELPGPU" --item-depth \
 	--radiolist "F1 to know your GPU, SPACE to select a driver:" 0 0 0 \
 	0 DRM           "Intel and AMD Metaport"                         off \
@@ -122,7 +122,7 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 	Untested nvidia-driver-304 'Old proprietary driver version 304' off"
 
 	gpu=$(echo $items | xargs -o bsddialog --backtitle "FreeBSD Installer" \
-		--title Desktop --ok-label Install --cancel-label Skip \
+		--title Desktop --ok-label Install --cancel-label Exit \
 		--hmsg "$HELPGPU" --item-prefix \
 		--radiolist "F1 to know your GPU and which driver supports it. SPACE to select a driver." \
 		0 0 0 \
@@ -179,7 +179,7 @@ users=`pw usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print
 
 exec 5>&1
 USERS=$(echo ${users} | xargs -o bsddialog --backtitle "FreeBSD Installer" \
-	--title "Desktop" --ok-label Add --cancel-label Skip \
+	--title "Desktop" --ok-label Add --cancel-label Exit \
 	--checklist 'Select the users enabled for the graphical environment:' 0 0 0 2>&1 1>&5)
 exec 5>&-
 [ $? -ne $BSDDIALOG_OK -o -z "USERS" ] && exit 0
