@@ -57,18 +57,18 @@ fi
 PKGGPU=`fwget -n -q | grep gpu`
 BOOTMETHOD=`sysctl -n machdep.bootmethod`
 # F1 help message...
-HELPGPU="System firmware boot method: $BOOTMETHOD
+HELPGPU="\ZbSystem firmware boot method\Zn: $BOOTMETHOD
 
-GPU:
+\ZbGPU\Zn:
 `pciconf -lv | grep -A 4 vga`
 
-Detected firmware package: $PKGGPU"
+\ZbDetected firmware package\Zn: $PKGGPU"
 # ...end F1 help message
 
 # TODO: add auto detection, via pciconf -lv and fwget -n -q
 gpu=$(bsddialog --backtitle "FreeBSD Installer" --title Desktop \
 	--ok-label Install --cancel-label Exit \
-	--hmsg "$HELPGPU" --item-depth \
+	--colors --hmsg "$HELPGPU" --item-depth \
 	--radiolist "F1 to know your GPU, SPACE to select a driver:" 0 0 0 \
 	0 DRM           "Intel and AMD Metaport"                         off \
 	1 Intel         "Intel APUs starting with HD3000 / Sandy Bridge" off \
@@ -119,6 +119,15 @@ case $gpu in
 		;;
 esac
 
+HELPGPU="$HELPGPU
+
+\ZbSupported GPUs\Zn:
+ * nvidia-drm-drm: \Zuhttps://www.nvidia.com/en-us/drivers/details/210651/\Zn
+ * nvidia-driver-470: \Zuhttps://www.nvidia.com/en-us/drivers/details/194639/\Zn
+ * nvidia-driver-390: \Zuhttps://www.nvidia.com/en-us/drivers/details/191122/\Zn
+ * nvidia-driver-340: \Zuhttps://www.nvidia.com/en-us/drivers/details/156167/\Zn
+ * nvidia-driver-304: \Zuhttps://www.nvidia.com/en-us/drivers/details/123712/\Zn"
+
 if [ $gpu = NVIDIA -o $optimus ]; then
 	# 580 no in handbook.
 	items="Untested nvidia-drm-kmod 'Proprietary driver for recent GPUs' off \
@@ -129,7 +138,7 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 
 	gpu=$(echo $items | xargs -o bsddialog --backtitle "FreeBSD Installer" \
 		--title Desktop --ok-label Install --cancel-label Exit \
-		--hmsg "$HELPGPU" --item-prefix \
+		--colors --hmsg "$HELPGPU" --item-prefix \
 		--radiolist "F1 to know your GPU and which driver supports it. SPACE to select a driver." \
 		0 0 0 \
 	3>&1 1>&2 2>&3 3>&-)
