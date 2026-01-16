@@ -176,11 +176,11 @@ pkg install $toinstall xorg kde sddm wireplumber
 
 bsddialog --backtitle "FreeBSD Installer" --title Desktop --infobox "Setting DE..." 0 0
 # sysrc not a pkgbase minimal installation
-echo "# KDE set up" >> /etc/rc.conf
+echo "# KDE setup" >> /etc/rc.conf
 eval $postconfig
 echo dbus_enable=\"YES\" >> /etc/rc.conf
 echo sddm_enable=\"YES\" >> /etc/rc.conf
-echo "# KDE set up" >> /etc/sysctl.conf
+echo "# KDE setup" >> /etc/sysctl.conf
 echo "net.local.stream.recvspace=65536" >> /etc/sysctl.conf
 echo "net.local.stream.sendspace=65536" >> /etc/sysctl.conf
 
