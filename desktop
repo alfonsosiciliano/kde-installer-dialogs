@@ -108,7 +108,7 @@ case $gpu in
 		;;
 	VirtualBox)
 		toinstall="virtualbox-ose-additions"
-		postconfig="echo -e \"vboxguest_enable=\\\"YES\\\"\nvboxservice_enable=\\\"YES\\\"\" >> /etc/rc.conf"
+		postconfig="echo -e \"# VirtualBox setup\nvboxguest_enable=\\\"YES\\\"\nvboxservice_enable=\\\"YES\\\"\" >> /etc/rc.conf"
 		;;
 	VESA)
 		toinstall="xf86-video-vesa"
@@ -175,9 +175,9 @@ pkg install $toinstall xorg kde sddm wireplumber
 [ $? -ne 0 ] && exit 0
 
 bsddialog --backtitle "FreeBSD Installer" --title Desktop --infobox "Setting DE..." 0 0
-# sysrc not a pkgbase minimal installation
-echo "# KDE setup" >> /etc/rc.conf
 eval $postconfig
+echo "# KDE setup" >> /etc/rc.conf
+# sysrc(8) is not in a pkgbase minimal installation
 echo dbus_enable=\"YES\" >> /etc/rc.conf
 echo sddm_enable=\"YES\" >> /etc/rc.conf
 echo "# KDE setup" >> /etc/sysctl.conf
