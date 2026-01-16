@@ -1,6 +1,6 @@
 # FreeBSD KDE Installer Dialogs
 
-Copyright (C) 2025 The [The FreeBSD Foundation](https://freebsdfoundation.org/).
+Copyright (C) 2025 - 2026 The [The FreeBSD Foundation](https://freebsdfoundation.org/).
 
 
 Introduction
