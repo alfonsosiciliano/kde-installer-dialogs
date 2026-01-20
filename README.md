@@ -11,6 +11,12 @@ This is a WIP script to install KDE Plasma via bsdinstall:
 for The FreeBSD Foundation's Laptop Support and Usability Project
 <https://github.com/FreeBSDFoundation/proj-laptop>.
 
+The primary repository for this project is
+<https://gitlab.com/alfix/kde-installer-dialogs>.
+A temporary clone is also available on
+[GitHub](https://github.com/alfonsosiciliano/kde-installer-dialogs)
+to simplify the Call for Testing people without a GitLab account.
+
 Screenshots
 -----------
 
