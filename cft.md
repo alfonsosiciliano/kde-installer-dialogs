@@ -48,7 +48,7 @@ or a
 
  - FreeBSD Version: output of `uname -rK` and real hardware or virtual machine.
  - GPU: `pciconf -lv | grep -A 4 vga` and `fwget -nq | grep gpu`
- - Driver: selected GPU item in the radiolist dialog (AMD, Intel,  nvidia-drm-kmod, nvidia-driver-XYZ, etc.)  
+ - Driver: selected GPU item in the radiolist dialog (AMD, Intel, nvidia-drm-kmod, nvidia-driver-XYZ, etc.)  
  - Notes: optional.
 
 | FreeBSD Version | GPU | Driver | Notes |
