@@ -17,6 +17,15 @@ A temporary clone is also available on
 [GitHub](https://github.com/alfonsosiciliano/kde-installer-dialogs)
 to simplify the Call for Testing people without a GitLab account.
 
+
+The main repository for this project is on
+[gitlab/kde-installer-dialogs](https://gitlab.com/alfix/kde-installer-dialogs).
+A temporary [GitHub mirror](https://github.com/alfonsosiciliano/kde-installer-dialogs)
+is also available to make it easier for participants in the Call for Testing who do not have a GitLab account.
+
+I can also make it slightly snappier if you want it to read more smoothly in documentation. Do you want me to do that?
+
+
 Call for testing
 ----------------
 
