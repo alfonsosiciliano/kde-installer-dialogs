@@ -53,7 +53,7 @@ or a
 
 | FreeBSD Version | GPU | Driver | Notes |
 | --------------- | --- | ------ | ----- |
-|                 |     |        |       |
+| 16.0-CURRENT 1600009 | Intel HD Graphics 620 | Intel | Lenovo Yoga 11e |
 |                 |     |        |       |
 |                 |     |        |       |
 |                 |     |        |       |
