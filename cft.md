@@ -56,7 +56,7 @@ or a
 | 16.0-CURRENT 1600009 | Intel HD Graphics 620 | Intel | Lenovo Yoga 11e |
 | 16.0-CURRENT 1600009 | AMD Radeon 780M | AMD | Framework 13 AMD 7040 Series |
 | 15.0-RELEASE-p1 1500068 | GP108M | GeForce MX150 | All OK! Asus Zenbook ux433fn |
-|                 |     |        |       |
+| 16.0-CURRENT 1600009 | Intel Iris Graphics 6100 | Intel | MacBook Pro 12,1 (Early 2015) |
 |                 |     |        |       |
 |                 |     |        |       |
 |                 |     |        |       |
