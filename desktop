@@ -133,7 +133,7 @@ case $gpu in
 		postconfig="sysrc kld_list+=\"radeonkms\""
 		;;
 	VirtualBox)
-		toinstall="virtualbox-ose-additions"
+		toinstall="virtualbox-ose-additions-72"
 		postconfig="sysrc vboxguest_enable=\"YES\" ; sysrc vboxservice_enable=\"YES\""
 		;;
 	VESA)
