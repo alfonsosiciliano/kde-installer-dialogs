@@ -228,6 +228,14 @@ if [ $gpu = VirtualBox ]; then
 	--msgbox "VirtualBox setting: select VBoxSVGA as graphics controller,
 	and disable 3D acceleration." \
 	0 0
+
+	# Useful for poweroff(8). Is this script the right place for this setting?
+	if [ `sysctl -n machdep.bootmethod` = UEFI ]; then
+		{ 
+			echo "# VirtualBox setup";
+			echo "hw.efi.poweroff=0";
+		} >> /boot/loader.conf
+	fi
 fi
 
 #### SECTION 5: For User Configuration ####
@@ -248,13 +256,6 @@ fi
 
 if [ $gpu = VirtualBox ]; then
 	pw groupmod wheel -m `echo "$users" | tr ' ' ','`
-	# Useful for poweroff(8). Is this script the right place for this setting?
-	if [ `sysctl -n machdep.bootmethod` = UEFI ]; then
-		{ 
-			echo "# VirtualBox setup";
-			echo "hw.efi.poweroff=0";
-		} >> /boot/loader.conf
-	fi
 fi
 
 gen_autostart_entry() {
