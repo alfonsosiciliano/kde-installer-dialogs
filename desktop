@@ -42,10 +42,11 @@ readonly XDRIVERFILE=/usr/local/etc/X11/xorg.conf.d/20-generic-driver.conf
 ####
 # 1. Yes-No question and Checks.
 # 2. Select GPU driver.
-# 3. Installation.
-# 4. Global Configuration.
-# 5. Configuration for users.
-# 6. Success message.
+# 3. Select display manager.
+# 4. Installation.
+# 5. Global Configuration.
+# 6. Configuration for users.
+# 7. Success message.
 ####
 
 #### SECTION 1: Yes-No question and Checks ####
@@ -196,12 +197,14 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 	fi
 fi
 
-#### SECTION 3: Installation and Global Configuration ####
+#### SECTION 3: Display Manager ####
+
+#### SECTION 4: Installation ####
 ASSUME_ALWAYS_YES=yes pkg update
 pkg install $toinstall kde plasma6-plasma ly wireplumber xorg
 [ $? -ne 0 ] && exit 0
 
-#### SECTION 4: Global Configuration ####
+#### SECTION 5: Global Configuration ####
 bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 	--infobox "Create and update configuration files" 0 0
 
@@ -238,7 +241,7 @@ if [ $gpu = VirtualBox ]; then
 	fi
 fi
 
-#### SECTION 5: For User Configuration ####
+#### SECTION 6: For User Configuration ####
 
 USERS=`pw usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print $1 " \""$8"\" off"}' | sort`
 
@@ -351,7 +354,7 @@ for u in $users; do
 	chown -R ${u}:${u} "${user_config_dir}"
 done
 
-#### SECTION 5: Success Message ####
+#### SECTION 7: Success Message ####
 bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 	--msgbox "\nDesktop installation completed.\n\nThe Ly display
 	manager will start automatically and allow text-based login at the next
