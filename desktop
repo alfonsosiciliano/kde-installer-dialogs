@@ -112,38 +112,38 @@ gpu=$(bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 [ -z $gpu ] && exit 0
 
 toinstall=""
-postconfig=""
+gpuconfig=""
 case $gpu in
 	DRM)
 		toinstall="drm-kmod mesa-gallium-va libva-utils libva-intel-media-driver"
-		postconfig="sysrc kld_list+=\"i915kms amdgpu radeonkms\""
+		gpuconfig="sysrc kld_list+=\"i915kms amdgpu radeonkms\""
 		;;
 	Optimus-Intel)
 		optimus=1
 		;&
 	Intel)
 		toinstall="drm-kmod mesa-gallium-va libva-utils libva-intel-media-driver"
-		postconfig="sysrc kld_list+=\"i915kms\""
+		gpuconfig="sysrc kld_list+=\"i915kms\""
 		;;
 	AMD)
 		toinstall="drm-kmod mesa-gallium-va libva-utils"
-		postconfig="sysrc kld_list+=\"amdgpu\""
+		gpuconfig="sysrc kld_list+=\"amdgpu\""
 		;;
 	Radeon)
 		toinstall="drm-kmod mesa-gallium-va libva-utils"
-		postconfig="sysrc kld_list+=\"radeonkms\""
+		gpuconfig="sysrc kld_list+=\"radeonkms\""
 		;;
 	VirtualBox)
 		toinstall="virtualbox-ose-additions-72"
-		postconfig="sysrc vboxguest_enable=\"YES\" ; sysrc vboxservice_enable=\"YES\""
+		gpuconfig="sysrc vboxguest_enable=\"YES\" ; sysrc vboxservice_enable=\"YES\""
 		;;
 	VESA)
 		toinstall="xf86-video-vesa"
-		postconfig="printf 'Section \"Device\"\n\tIdentifier \"Card0\"\n\tDriver \"vesa\"\nEndSection' >> $XDRIVERFILE"
+		gpuconfig="printf 'Section \"Device\"\n\tIdentifier \"Card0\"\n\tDriver \"vesa\"\nEndSection' >> $XDRIVERFILE"
 		;;
 	SCFB)
 		toinstall="xf86-video-scfb"
-		postconfig="printf 'Section \"Device\"\n\tIdentifier \"Card0\"\n\tDriver \"scfb\"\nEndSection' >> $XDRIVERFILE"
+		gpuconfig="printf 'Section \"Device\"\n\tIdentifier \"Card0\"\n\tDriver \"scfb\"\nEndSection' >> $XDRIVERFILE"
 		;;
 esac
 
@@ -190,10 +190,10 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 	fi
 
 	if [ $optimus ]; then
-		postconfig="$postconfig ; echo hw.nvidiadrm.modeset=\\\"1\\\" >> /boot/loader.conf"
-		postconfig="$postconfig ; sysrc kld_list+=\"i915kms $kmod\""
+		gpuconfig="$gpuconfig ; echo hw.nvidiadrm.modeset=\\\"1\\\" >> /boot/loader.conf"
+		gpuconfig="$gpuconfig ; sysrc kld_list+=\"i915kms $kmod\""
 	else
-		postconfig="sysrc kld_list+=\"$kmod\""
+		gpuconfig="sysrc kld_list+=\"$kmod\""
 	fi
 fi
 
@@ -217,7 +217,7 @@ sed -i '' '/hw.nvidiadrm.modeset="1"/d' /boot/loader.conf
 sed -i '' '/# VirtualBox setup/d' /boot/loader.conf
 sed -i '' '/hw.efi.poweroff=0/d' /boot/loader.conf
 
-eval $postconfig
+eval $gpuconfig
 sysrc dbus_enable="YES"
 grep -qxF "# KDE setup" /etc/sysctl.conf || {
 	echo "# KDE setup";
