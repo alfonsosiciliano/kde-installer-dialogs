@@ -206,7 +206,7 @@ displaymgr=$(bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 	3>&1 1>&2 2>&3 3>&-)
 [ $? -ne $BSDDIALOG_OK ] && exit 1
 
-# Setup Ly display manager
+# Ly ini, should be added to the x11/ly port?
 LYINI="allow_empty_password = true
 animation = none
 asterisk = *
