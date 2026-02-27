@@ -329,9 +329,6 @@ if [ $gpu = VirtualBox ]; then
 fi
 
 #### SECTION 6: For User Configuration ####
-
-USERS=`pw usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print $1 " \""$8"\" off"}' | sort`
-
 exec 5>&1
 users=$(echo ${USERS} | xargs -o bsddialog --backtitle "$OSNAME Installer" \
 	--title Desktop --ok-label Continue \
