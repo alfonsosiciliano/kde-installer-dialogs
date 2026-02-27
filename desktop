@@ -42,11 +42,11 @@ readonly XDRIVERFILE=/usr/local/etc/X11/xorg.conf.d/20-generic-driver.conf
 USERS=`pw usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print $1 " \""$8"\" off"}' | sort`
 
 ####
-# 1. Yes-No question and Checks.
+# 1. Yes-No question and checks.
 # 2. Select GPU driver.
 # 3. Select display manager.
 # 4. Installation.
-# 5. Global Configuration.
+# 5. Global configuration.
 # 6. Configuration for users.
 # 7. Success message.
 ####
