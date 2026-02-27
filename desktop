@@ -53,8 +53,8 @@ readonly XDRIVERFILE=/usr/local/etc/X11/xorg.conf.d/20-generic-driver.conf
 QUESTION="FreeBSD provides a variety of graphical environments that can
 be easily installed through ports and packages. Refer to the FreeBSD
 Handbook available at \Zuhttps://docs.freebsd.org\Zn.\n\n
-Would you like to install the GPU drivers, Xorg, KDE Plasma, and SDDM
-now, and have them start automatically at the next system reboot?\n\n
+Would you like to install the GPU drivers, Xorg, KDE Plasma, and a display
+manager now, and have them start automatically at the next system reboot?\n\n
 Please note this is an experimental feature."
 bsddialog --backtitle "$OSNAME Installer" --title Desktop --colors \
 	--yesno "$QUESTION" 0 0
@@ -198,6 +198,15 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 fi
 
 #### SECTION 3: Display Manager ####
+displaymgr=$(bsddialog --backtitle "$OSNAME Installer" --title Desktop \
+	--ok-label Select \
+	--menu "Select the display manager to enter the nickname and password to log into the system:" \
+	0 0 0 \
+	Ly	"Text User Interface display manager" \
+	SDDM	"Graphical User Interface display manager" \
+	3>&1 1>&2 2>&3 3>&-)
+[ $? -ne $BSDDIALOG_OK ] && exit 1
+
 # Setup Ly display manager
 LYINI="allow_empty_password = true
 animation = none
@@ -244,17 +253,29 @@ xauth_cmd = /usr/local/bin/xauth
 xinitrc = ~/.xinitrc
 xsessions = /usr/local/share/xsessions"
 
-dmgrconfig="sed -i '' -e 's|ttyv1.*getty Pc.*|ttyv1 \"/usr/libexec/getty Ly\" xterm on secure|' /etc/ttys"
-dmgrconfig="$dmgrconfig ; echo \"$LYINI\" >> /usr/local/etc/ly/config.ini"
-dmgrconfig="$dmgrconfig ; "'echo "# Ly manager
+case $displaymgr in
+	SDDM)
+		toinstall="$toinstall sddm"
+		dmgrconfig="sysrc sddm_enable=\"YES\""
+		;;
+	Ly)
+		toinstall="$toinstall ly"
+		dmgrconfig="sed -i '' -e 's|ttyv1.*getty Pc.*|ttyv1 \"/usr/libexec/getty Ly\" xterm on secure|' /etc/ttys"
+		dmgrconfig="$dmgrconfig ; echo \"$LYINI\" >> /usr/local/etc/ly/config.ini"
+		dmgrconfig="$dmgrconfig ; "'echo "# Ly manager
 Ly:\\
 :lo=/usr/local/bin/ly_wrapper:\\
 :al=root:" >> /etc/gettytab'
+		;;
+esac
 
+echo "$dmgrconfig"
+echo $toinstall kde plasma6-plasma wireplumber xorg
+exit 0
 
 #### SECTION 4: Installation ####
 ASSUME_ALWAYS_YES=yes pkg update
-pkg install $toinstall kde plasma6-plasma ly wireplumber xorg
+pkg install $toinstall kde plasma6-plasma wireplumber xorg
 [ $? -ne 0 ] && exit 0
 
 #### SECTION 5: Global Configuration ####
@@ -269,9 +290,9 @@ rm -f $XDRIVERFILE
 sed -i '' '/hw.nvidiadrm.modeset="1"/d' /boot/loader.conf
 sed -i '' '/# VirtualBox setup/d' /boot/loader.conf
 sed -i '' '/hw.efi.poweroff=0/d' /boot/loader.conf
-
+sed -i '' '/sddm_enable="YES"/d' /etc.rc.conf
 sed -i '' '/^# Ly manager\\/,+3' /etc/gettytab
-#rm -f /usr/local/etc/ly/config.ini
+#rm -f /usr/local/etc/ly/config.ini should be removed? It is istalled,
 sed -i '' -e 's|ttyv1.*getty Ly.*|ttyv1\t"/usr/libexec/getty Pc"\t\txterm\tonifexists secure|' /etc/ttys
 
 eval $gpuconfig
@@ -357,7 +378,7 @@ done
 
 #### SECTION 7: Success Message ####
 bsddialog --backtitle "$OSNAME Installer" --title Desktop \
-	--msgbox "\nDesktop installation completed.\n\nThe Ly display
+	--msgbox "\nDesktop installation completed.\n\nThe ${displaymgr} display
 	manager will start automatically and allow text-based login at the next
 	startup. The enabled users with configured settings are: ${users}." \
 	0 0
