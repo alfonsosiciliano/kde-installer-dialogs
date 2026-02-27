@@ -269,10 +269,6 @@ Ly:\\
 		;;
 esac
 
-echo "$dmgrconfig"
-echo $toinstall kde plasma6-plasma wireplumber xorg
-exit 0
-
 #### SECTION 4: Installation ####
 ASSUME_ALWAYS_YES=yes pkg update
 pkg install $toinstall kde plasma6-plasma wireplumber xorg
