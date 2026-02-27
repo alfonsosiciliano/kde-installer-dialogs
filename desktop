@@ -198,81 +198,8 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 fi
 
 #### SECTION 3: Display Manager ####
-
-#### SECTION 4: Installation ####
-ASSUME_ALWAYS_YES=yes pkg update
-pkg install $toinstall kde plasma6-plasma ly wireplumber xorg
-[ $? -ne 0 ] && exit 0
-
-#### SECTION 5: Global Configuration ####
-bsddialog --backtitle "$OSNAME Installer" --title Desktop \
-	--infobox "Create and update configuration files" 0 0
-
-# Delete the previous configurations if this script has been called before
-# using finalconfig menu script.
-# Is this really necessary? Does bsdinstall provide a reset or restart option?
-sysrc-=" i915kms amdgpu radeonkms nvidia-drm nvidia-modeset nvidia"
-rm -f $XDRIVERFILE
-sed -i '' '/hw.nvidiadrm.modeset="1"/d' /boot/loader.conf
-sed -i '' '/# VirtualBox setup/d' /boot/loader.conf
-sed -i '' '/hw.efi.poweroff=0/d' /boot/loader.conf
-
-eval $gpuconfig
-sysrc dbus_enable="YES"
-grep -qxF "# KDE setup" /etc/sysctl.conf || {
-	echo "# KDE setup";
-	echo "net.local.stream.recvspace=65536";
-	echo "net.local.stream.sendspace=65536";
-} >> /etc/sysctl.conf
-
-
-if [ $gpu = VirtualBox ]; then
-	bsddialog --backtitle "$OSNAME Installer" --title Desktop \
-	--msgbox "VirtualBox setting: select VBoxSVGA as graphics controller,
-	and disable 3D acceleration." \
-	0 0
-
-	# Useful for poweroff(8). Is this script the right place for this setting?
-	if [ `sysctl -n machdep.bootmethod` = UEFI ]; then
-		{ 
-			echo "# VirtualBox setup";
-			echo "hw.efi.poweroff=0";
-		} >> /boot/loader.conf
-	fi
-fi
-
-#### SECTION 6: For User Configuration ####
-
-USERS=`pw usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print $1 " \""$8"\" off"}' | sort`
-
-exec 5>&1
-users=$(echo ${USERS} | xargs -o bsddialog --backtitle "$OSNAME Installer" \
-	--title Desktop --ok-label Continue \
-	--checklist "SPACE to select the users enabled for the graphical environment:" \
-	0 0 0 \
-	2>&1 1>&5)
-exec 5>&-
-[ $? -ne $BSDDIALOG_OK -o -z "$users" ] && exit 0
-
-if [ $gpu != VESA -a $gpu != SCFB -a $gpu != VirtualBox ]; then
-	pw groupmod video -m `echo "$users" | tr ' ' ','`
-fi
-
-if [ $gpu = VirtualBox ]; then
-	pw groupmod wheel -m `echo "$users" | tr ' ' ','`
-fi
-
 # Setup Ly display manager
-cat << 'EOF' >> /etc/gettytab
-Ly:\
-:lo=/usr/local/bin/ly_wrapper:\
-:al=root:
-EOF
-
-sed -i '' -e 's|ttyv1.*getty Pc.*|ttyv1 "/usr/libexec/getty Ly" xterm on secure|' /etc/ttys
-
-LYCONFFILE="
-allow_empty_password = true
+LYINI="allow_empty_password = true
 animation = none
 asterisk = *
 auth_fails = 10
@@ -317,7 +244,81 @@ xauth_cmd = /usr/local/bin/xauth
 xinitrc = ~/.xinitrc
 xsessions = /usr/local/share/xsessions"
 
-echo "$LYCONFFILE" > /usr/local/etc/ly/config.ini
+dmgrconfig="sed -i '' -e 's|ttyv1.*getty Pc.*|ttyv1 \"/usr/libexec/getty Ly\" xterm on secure|' /etc/ttys"
+dmgrconfig="$dmgrconfig ; echo \"$LYINI\" >> /usr/local/etc/ly/config.ini"
+dmgrconfig="$dmgrconfig ; "'echo "# Ly manager
+Ly:\\
+:lo=/usr/local/bin/ly_wrapper:\\
+:al=root:" >> /etc/gettytab'
+
+
+#### SECTION 4: Installation ####
+ASSUME_ALWAYS_YES=yes pkg update
+pkg install $toinstall kde plasma6-plasma ly wireplumber xorg
+[ $? -ne 0 ] && exit 0
+
+#### SECTION 5: Global Configuration ####
+bsddialog --backtitle "$OSNAME Installer" --title Desktop \
+	--infobox "Create and update configuration files" 0 0
+
+# Delete the previous configurations if this script has been called before
+# using finalconfig menu script.
+# Is this really necessary? Does bsdinstall provide a reset or restart option?
+sysrc-=" i915kms amdgpu radeonkms nvidia-drm nvidia-modeset nvidia"
+rm -f $XDRIVERFILE
+sed -i '' '/hw.nvidiadrm.modeset="1"/d' /boot/loader.conf
+sed -i '' '/# VirtualBox setup/d' /boot/loader.conf
+sed -i '' '/hw.efi.poweroff=0/d' /boot/loader.conf
+
+sed -i '' '/^# Ly manager\\/,+3' /etc/gettytab
+#rm -f /usr/local/etc/ly/config.ini
+sed -i '' -e 's|ttyv1.*getty Ly.*|ttyv1\t"/usr/libexec/getty Pc"\t\txterm\tonifexists secure|' /etc/ttys
+
+eval $gpuconfig
+sysrc dbus_enable="YES"
+eval "$dmgrconfig"
+grep -qxF "# KDE setup" /etc/sysctl.conf || {
+	echo "# KDE setup";
+	echo "net.local.stream.recvspace=65536";
+	echo "net.local.stream.sendspace=65536";
+} >> /etc/sysctl.conf
+
+
+if [ $gpu = VirtualBox ]; then
+	bsddialog --backtitle "$OSNAME Installer" --title Desktop \
+	--msgbox "VirtualBox setting: select VBoxSVGA as graphics controller,
+	and disable 3D acceleration." \
+	0 0
+
+	# Useful for poweroff(8). Is this script the right place for this setting?
+	if [ `sysctl -n machdep.bootmethod` = UEFI ]; then
+		{ 
+			echo "# VirtualBox setup";
+			echo "hw.efi.poweroff=0";
+		} >> /boot/loader.conf
+	fi
+fi
+
+#### SECTION 6: For User Configuration ####
+
+USERS=`pw usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print $1 " \""$8"\" off"}' | sort`
+
+exec 5>&1
+users=$(echo ${USERS} | xargs -o bsddialog --backtitle "$OSNAME Installer" \
+	--title Desktop --ok-label Continue \
+	--checklist "SPACE to select the users enabled for the graphical environment:" \
+	0 0 0 \
+	2>&1 1>&5)
+exec 5>&-
+[ $? -ne $BSDDIALOG_OK -o -z "$users" ] && exit 0
+
+if [ $gpu != VESA -a $gpu != SCFB -a $gpu != VirtualBox ]; then
+	pw groupmod video -m `echo "$users" | tr ' ' ','`
+fi
+
+if [ $gpu = VirtualBox ]; then
+	pw groupmod wheel -m `echo "$users" | tr ' ' ','`
+fi
 
 gen_autostart_entry() {
 	cat <<EOF
