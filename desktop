@@ -175,7 +175,6 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 
 	toinstall="$toinstall $gpu"
 	version=${gpu##nvidia-driver-}
-	# refactor importing to bsdinstall
 	if [ $version = "nvidia-drm-kmod" ]; then
 		# Handbook: when nvidia-drm or nvidia-modeset?
 		kmod=nvidia-drm
@@ -280,7 +279,6 @@ bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 
 # Delete the previous configurations if this script has been called before
 # using finalconfig menu script.
-# Is this really necessary? Does bsdinstall provide a reset or restart option?
 sysrc-=" i915kms amdgpu radeonkms nvidia-drm nvidia-modeset nvidia"
 rm -f $XDRIVERFILE
 sed -i '' '/hw.nvidiadrm.modeset="1"/d' /boot/loader.conf
@@ -288,7 +286,7 @@ sed -i '' '/# VirtualBox setup/d' /boot/loader.conf
 sed -i '' '/hw.efi.poweroff=0/d' /boot/loader.conf
 sed -i '' '/sddm_enable="YES"/d' /etc.rc.conf
 sed -i '' '/^# Ly manager/,+3d' /etc/gettytab
-#rm -f /usr/local/etc/ly/config.ini should be removed? It is istalled,
+#rm -f /usr/local/etc/ly/config.ini XXX should be removed?
 sed -i '' -e 's|ttyv1.*getty Ly.*|ttyv1\t"/usr/libexec/getty Pc"\t\txterm\tonifexists secure|' /etc/ttys
 
 eval $gpuconfig
