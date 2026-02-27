@@ -39,6 +39,8 @@ readonly BSDDIALOG_NO=1
 
 readonly XDRIVERFILE=/usr/local/etc/X11/xorg.conf.d/20-generic-driver.conf
 
+USERS=`pw usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print $1 " \""$8"\" off"}' | sort`
+
 ####
 # 1. Yes-No question and Checks.
 # 2. Select GPU driver.
@@ -63,6 +65,18 @@ bsddialog --backtitle "$OSNAME Installer" --title Desktop --colors \
 if [ -z "$(hostname)" ]; then
 	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
 	--ok-label Exit --msgbox "Please set a hostname." 0 0
+	exit 1
+fi
+
+if [ -z "$USERS" ]; then
+	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
+	--ok-label Exit \
+	--msgbox "No created user accounts were found on this system.
+Although it is possible to run a graphical environment as the root user,
+it is strongly discouraged for security reasons.\n\n
+Please create at least one regular user account before launching this module
+to install a graphical desktop environment." \
+	0 0
 	exit 1
 fi
 
