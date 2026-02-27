@@ -261,7 +261,7 @@ case $displaymgr in
 	Ly)
 		toinstall="$toinstall ly"
 		dmgrconfig="sed -i '' -e 's|ttyv1.*getty Pc.*|ttyv1 \"/usr/libexec/getty Ly\" xterm on secure|' /etc/ttys"
-		dmgrconfig="$dmgrconfig ; echo \"$LYINI\" >> /usr/local/etc/ly/config.ini"
+		dmgrconfig="$dmgrconfig ; echo \"$LYINI\" > /usr/local/etc/ly/config.ini"
 		dmgrconfig="$dmgrconfig ; "'echo "# Ly manager
 Ly:\\
 :lo=/usr/local/bin/ly_wrapper:\\
