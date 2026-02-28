@@ -156,6 +156,7 @@ case $gpu in
 		;;
 	VMware)
 		toinstall="install xf86-video-vmware xf86-input-vmmouse open-vm-tools"
+		gpuconfig="sysrc kld_list+=\"fusefs\""
 		;;
 	VESA)
 		toinstall="xf86-video-vesa"
@@ -299,7 +300,7 @@ bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 
 # Delete the previous configurations if this script has been called before
 # using finalconfig menu script.
-sysrc-=" i915kms amdgpu radeonkms nvidia-drm nvidia-modeset nvidia"
+sysrc-=" i915kms amdgpu radeonkms nvidia-drm nvidia-modeset nvidia fusefs"
 rm -f $XDRIVERFILE
 sed -i '' '/hw.nvidiadrm.modeset="1"/d' /boot/loader.conf
 sed -i '' '/# VirtualBox setup/d' /boot/loader.conf
