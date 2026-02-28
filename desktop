@@ -307,7 +307,7 @@ sed -i '' '/# VirtualBox setup/d' /boot/loader.conf
 sed -i '' '/hw.efi.poweroff=0/d' /boot/loader.conf
 sed -i '' '/sddm_enable="YES"/d' /etc.rc.conf
 sed -i '' '/^# Ly manager/,+3d' /etc/gettytab
-#rm -f /usr/local/etc/ly/config.ini XXX should be removed?
+cp /usr/local/etc/ly/config.ini.sample /usr/local/etc/ly/config.ini 2>/dev/null
 sed -i '' -e 's|ttyv1.*getty Ly.*|ttyv1\t"/usr/libexec/getty Pc"\t\txterm\tonifexists secure|' /etc/ttys
 
 eval $gpuconfig
