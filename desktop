@@ -118,7 +118,7 @@ gpu=$(bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 	1 Intel         "Intel APUs starting with HD3000 / Sandy Bridge" ${intel-off} \
 	1 AMD           "AMD GPUs starting with HD7000 / Tahiti"         ${amd-off} \
 	1 Radeon        "Older AMD GPUs (EFI boot should be disabled)"   ${radeon-off} \
-	0 NVIDIA        "Proprietary driver "                            ${nvidia-off} \
+	0 NVIDIA        "Proprietary driver"                            ${nvidia-off} \
 	1 Optimus-Intel "Nvidia Optimus and Intel GPU"                   ${optimus-off} \
 	0 VirtualBox    "Oracle VirtualBox"                             ${virtualbox-off} \
 	0 VMware        "Broadcom Workstation virtual machine"           ${vmware=off} \
