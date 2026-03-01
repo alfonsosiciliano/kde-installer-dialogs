@@ -155,7 +155,7 @@ case $gpu in
 		gpuconfig="sysrc vboxguest_enable=\"YES\" ; sysrc vboxservice_enable=\"YES\""
 		;;
 	VMware)
-		toinstall="install xf86-video-vmware xf86-input-vmmouse open-vm-tools"
+		toinstall="xf86-video-vmware xf86-input-vmmouse open-vm-tools"
 		gpuconfig="sysrc kld_list+=\"fusefs\""
 		;;
 	VESA)
