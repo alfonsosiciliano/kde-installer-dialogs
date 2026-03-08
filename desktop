@@ -195,26 +195,31 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 	[ $? -ne $BSDDIALOG_OK -o -z $gpu ] && exit 0
 
 	toinstall="$toinstall $gpu"
+	gpuconfig="${gpuconfig:+"$gpuconfig ; "}"
 	version=${gpu##nvidia-driver-}
-	if [ $version = "nvidia-drm-kmod" ]; then
-		# Handbook: when nvidia-drm or nvidia-modeset?
-		kmod=nvidia-drm
-	elif [ $version -ge 390 ]; then
-		kmod=nvidia-modeset
-	else
-		# 304 and 340.
-		# Available for OPTIMUS?
-		# Handbook: with the legacy sc(4) console driver, and a
-		# x11/xorg-server version prior to 1.20.
-		kmod=nvidia
-	fi
-
-	if [ $optimus ]; then
-		gpuconfig="$gpuconfig ; echo hw.nvidiadrm.modeset=\\\"1\\\" >> /boot/loader.conf"
-		gpuconfig="$gpuconfig ; sysrc kld_list+=\"i915kms $kmod\""
-	else
-		gpuconfig="sysrc kld_list+=\"$kmod\""
-	fi
+	case $version in
+		"nvidia-drm-kmod")
+			# Handbook: when nvidia-drm or nvidia-modeset?
+			gpuconfig="$gpuconfig sysrc kld_list+=\"nvidia-drm\""
+			# Useful non-mandatory tools required by the call for
+			# testing to set up gpu and to run linux ports like
+			# astro/google-earth
+			toinstall="$toinstall nvidia-settings nvidia-xconfig nvidia-texture-tools"
+			toinstall="$toinstall linux-nvidia-libs"
+			gpuconfig="$gpuconfig ; sysrc linux_enable=\"YES\""
+			gpuconfig="$gpuconfig ; echo \"linprocfs /proc linprocfs rw 0 0\" >> /etc/fstab"
+			gpuconfig="$gpuconfig ; echo \"linsysfs /compat/linux/sys linsysfs rw 0 0\" >> /etc/fstab"
+			;;
+		470 | 390)
+			gpuconfig="$gpuconfig sysrc kld_list+=\"nvidia-modeset\""
+			;;
+		340 | 304)
+			# 304 should not support OPTIMUS
+			# Handbook: 304 and 340 with the legacy sc(4) console
+			# driver, and a x11/xorg-server version prior to 1.20.
+			gpuconfig="$gpuconfig sysrc kld_list+=\"nvidia\""
+			;;
+	esac
 fi
 
 #### SECTION 3: Display Manager ####
@@ -309,6 +314,8 @@ sed -i '' '/sddm_enable="YES"/d' /etc/rc.conf
 sed -i '' '/^# Ly manager/,+3d' /etc/gettytab
 cp /usr/local/etc/ly/config.ini.sample /usr/local/etc/ly/config.ini 2>/dev/null
 sed -i '' -e 's|ttyv1.*getty Ly.*|ttyv1\t"/usr/libexec/getty Pc"\t\txterm\tonifexists secure|' /etc/ttys
+sed -i '' '/linprocfs/d' /etc/fstab
+sed -i '' '/linsysfs/d' /etc/fstab
 
 eval $gpuconfig
 sysrc dbus_enable="YES"
