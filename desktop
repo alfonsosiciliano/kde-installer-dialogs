@@ -204,7 +204,7 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 				--yesno "Do you want to install extra packages \
 				to configure the GPU or to run tools that require \
 				compatibility with linux (example google-earth-pro)?" \
-			0 0
+				0 0
 			if [ $? -eq $BSDDIALOG_YES ]; then
 				toinstall="$toinstall nvidia-settings nvidia-xconfig nvidia-texture-tools"
 				toinstall="$toinstall linux-nvidia-libs"
