@@ -222,6 +222,9 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 			gpuconfig="$gpuconfig sysrc kld_list+=\"nvidia\""
 			;;
 	esac
+		if [ $version = "nvidia-drm-kmod" -o $optimus ]; then
+		gpuconfig="$gpuconfig ; echo hw.nvidiadrm.modeset=\\\"1\\\" >> /boot/loader.conf"
+	fi
 fi
 
 #### SECTION 3: Display Manager ####
