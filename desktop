@@ -200,12 +200,16 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 		"nvidia-drm-kmod")
 			# Handbook: when nvidia-drm or nvidia-modeset?
 			gpuconfig="$gpuconfig sysrc kld_list+=\"nvidia-drm\""
-			# Useful non-mandatory tools required by the call for
-			# testing to set up gpu and to run linux ports like
-			# astro/google-earth
-			toinstall="$toinstall nvidia-settings nvidia-xconfig nvidia-texture-tools"
-			toinstall="$toinstall linux-nvidia-libs"
-			gpuconfig="$gpuconfig ; sysrc linux_enable=\"YES\""
+			bsddialog --backtitle "$OSNAME Installer" --title Desktop \
+			--yesno "Do you want to install extra useful packages 
+			to configure the GPU or to run tools that require
+			compatibility with linux (example google-earth-pro)?" \
+			0 0
+			if [ $? -eq $BSDDIALOG_YES ]; then
+				toinstall="$toinstall nvidia-settings nvidia-xconfig nvidia-texture-tools"
+				toinstall="$toinstall linux-nvidia-libs"
+				gpuconfig="$gpuconfig ; sysrc linux_enable=\"YES\""
+			fi
 			;;
 		470 | 390)
 			# To test, I have the hardware for 390
