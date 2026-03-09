@@ -171,7 +171,7 @@ esac
 HELPGPU="$HELPGPU
 
 \ZbSupported GPUs\Zn:
- * nvidia-drm-drm: \Zuhttps://www.nvidia.com/en-us/drivers/details/210651/\Zn
+ * nvidia-drm-drm (580): \Zuhttps://www.nvidia.com/en-us/drivers/details/210651/\Zn
  * nvidia-driver-470: \Zuhttps://www.nvidia.com/en-us/drivers/details/194639/\Zn
  * nvidia-driver-390: \Zuhttps://www.nvidia.com/en-us/drivers/details/191122/\Zn
  * nvidia-driver-340: \Zuhttps://www.nvidia.com/en-us/drivers/details/156167/\Zn
