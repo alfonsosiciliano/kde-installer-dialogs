@@ -211,6 +211,7 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 			gpuconfig="$gpuconfig ; echo \"linsysfs /compat/linux/sys linsysfs rw 0 0\" >> /etc/fstab"
 			;;
 		470 | 390)
+			# To test, I have the hardware for 390
 			gpuconfig="$gpuconfig sysrc kld_list+=\"nvidia-modeset\""
 			;;
 		340 | 304)
