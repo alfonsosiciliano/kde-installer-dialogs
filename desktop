@@ -179,15 +179,14 @@ HELPGPU="$HELPGPU
 
 if [ $gpu = NVIDIA -o $optimus ]; then
 	# 580 no in handbook.
-	items="Untested nvidia-drm-kmod 'Proprietary driver for recent GPUs' off \
-	Untested nvidia-driver-470 'Old proprietary driver version 470' off \
-	Untested nvidia-driver-390 'Old proprietary driver version 390' off \
-	Untested nvidia-driver-340 'Old proprietary driver version 340' off \
-	Untested nvidia-driver-304 'Old proprietary driver version 304' off"
+	items="nvidia-drm-kmod 'Proprietary driver version 580 for recent GPUs' off \
+	nvidia-driver-470 'Old proprietary driver version 470' off \
+	nvidia-driver-390 'Old proprietary driver version 390' off \
+	nvidia-driver-340 'Old proprietary driver version 340' off \
+	nvidia-driver-304 'Old proprietary driver version 304' off"
 
 	gpu=$(echo $items | xargs -o bsddialog --backtitle "$OSNAME Installer" \
-		--title Desktop --ok-label Continue \
-		--colors --hmsg "$HELPGPU" --item-prefix \
+		--title Desktop --ok-label Continue --colors --hmsg "$HELPGPU" \
 		--radiolist "F1 to know your GPU and which driver supports it.
 		SPACE to select a driver." \
 		0 0 0 \
