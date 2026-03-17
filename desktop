@@ -310,8 +310,18 @@ esac
 
 #### SECTION 4: Installation ####
 ASSUME_ALWAYS_YES=yes pkg update
-pkg install $toinstall kde plasma6-plasma wireplumber xorg
-[ $? -ne 0 ] && exit 0
+exec 5>&1
+error=$(pkg install XXX $toinstall kde plasma6-plasma wireplumber xorg 2>&1 1>&5)
+retval=$?
+exec 5>&-
+if [ $retval -ne 0 ]; then
+	bsddialog --backtitle "$OSNAME Installer" --title Desktop \
+	--msgbox "Error during package installation. Packages may currently be
+building, this is a common issue, try installing again later.\n\nReported error,
+$error" \
+	0 0
+	exit 1
+fi
 
 #### SECTION 5: Global Configuration ####
 bsddialog --backtitle "$OSNAME Installer" --title Desktop \
