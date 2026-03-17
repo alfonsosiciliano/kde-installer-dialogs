@@ -110,6 +110,7 @@ elif [ "${PKGGPU#*radeon}" != "$PKGGPU" ]; then
 else
 	[ $BOOTMETHOD == BIOS ] && vesa=on || scfb=on
 fi
+exec 5>&1
 gpu=$(bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 	--ok-label Continue \
 	--colors --hmsg "$HELPGPU" --item-depth \
@@ -124,8 +125,10 @@ gpu=$(bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 	0 VMware        "Broadcom virtual machine"                       ${vmware=off} \
 	0 VESA          "GPU not supported by other drivers (BIOS)"      ${vesa-off} \
 	0 SCFB          "GPU not supported by other drivers (UEFI)"      ${scfb-off} \
-	3>&1 1>&2 2>&3 3>&-)
-[ $? -ne $BSDDIALOG_OK ] && exit 1
+	2>&1 1>&5)
+retval=$?
+exec 5>&-
+[ $retval -ne $BSDDIALOG_OK ] && exit 1
 [ -z $gpu ] && exit 0
 
 toinstall=""
@@ -185,13 +188,16 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 	nvidia-driver-340 'Old proprietary driver version 340' off \
 	nvidia-driver-304 'Old proprietary driver version 304' off"
 
+	exec 5>&1
 	gpu=$(echo $items | xargs -o bsddialog --backtitle "$OSNAME Installer" \
 		--title Desktop --ok-label Continue --colors --hmsg "$HELPGPU" \
 		--radiolist "F1 to know your GPU and which driver supports it.
 		SPACE to select a driver." \
 		0 0 0 \
-		3>&1 1>&2 2>&3 3>&-)
-	[ $? -ne $BSDDIALOG_OK -o -z $gpu ] && exit 0
+		2>&1 1>&5)
+	retval=$?
+	exec 5>&-
+	[ $retval -ne $BSDDIALOG_OK -o -z $gpu ] && exit 0
 
 	toinstall="$toinstall $gpu"
 	gpuconfig="${gpuconfig:+"$gpuconfig ; "}"
@@ -228,14 +234,17 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 fi
 
 #### SECTION 3: Display Manager ####
+exec 5>&1
 displaymgr=$(bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 	--ok-label Select \
 	--menu "Select the display manager to enter the nickname and password to log into the system:" \
 	0 0 0 \
 	Ly	"Text User Interface display manager" \
 	SDDM	"Graphical User Interface display manager" \
-	3>&1 1>&2 2>&3 3>&-)
-[ $? -ne $BSDDIALOG_OK ] && exit 1
+	2>&1 1>&5)
+retval=$?
+exec 5>&-
+[ $retval -ne $BSDDIALOG_OK ] && exit 1
 
 # Ly ini, should be added to the x11/ly port?
 LYINI="allow_empty_password = true
@@ -352,8 +361,9 @@ users=$(echo ${USERS} | xargs -o bsddialog --backtitle "$OSNAME Installer" \
 	--checklist "SPACE to select the users enabled for the graphical environment:" \
 	0 0 0 \
 	2>&1 1>&5)
+retval=$?
 exec 5>&-
-[ $? -ne $BSDDIALOG_OK -o -z "$users" ] && exit 0
+[ $retval -ne $BSDDIALOG_OK -o -z "$users" ] && exit 0
 
 if [ $gpu != VESA -a $gpu != SCFB -a $gpu != VirtualBox ]; then
 	pw groupmod video -m `echo "$users" | tr ' ' ','`
