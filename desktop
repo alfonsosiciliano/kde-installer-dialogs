@@ -80,9 +80,6 @@ to install a graphical desktop environment." \
 	exit 1
 fi
 
-# TODO: check arch for gpu drivers.
-# TODO: check CURRENT for available packages.
-
 #### SECTION 2: Select GPU ####
 PKGGPU=`fwget -n -q | grep gpu`
 BOOTMETHOD=`sysctl -n machdep.bootmethod`
