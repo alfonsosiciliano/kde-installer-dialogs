@@ -39,7 +39,8 @@ readonly BSDDIALOG_NO=1
 
 readonly XDRIVERFILE=/usr/local/etc/X11/xorg.conf.d/20-generic-driver.conf
 
-USERS=`chroot $BSDINSTALL_CHROOT pw usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print $1 " \""$8"\" off"}' | sort`
+#TODO delete ${:-/} for review
+USERS=`chroot ${BSDINSTALL_CHROOT:-/} pw usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print $1 " \""$8"\" off"}' | sort`
 
 ####
 # 1. Yes-No question and checks.
