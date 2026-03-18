@@ -39,7 +39,7 @@ readonly BSDDIALOG_NO=1
 
 readonly XDRIVERFILE=/usr/local/etc/X11/xorg.conf.d/20-generic-driver.conf
 
-USERS=`pw usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print $1 " \""$8"\" off"}' | sort`
+USERS=`chroot $BSDINSTALL_CHROOT pw usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print $1 " \""$8"\" off"}' | sort`
 
 ####
 # 1. Yes-No question and checks.
@@ -306,10 +306,11 @@ Ly:\\
 esac
 
 #### SECTION 4: Installation ####
+# firmware script to know more for pkg and resolv.conf
+cp -f $BSDINSTALL_TMPETC/resolv.conf $BSDINSTALL_CHROOT/etc/
 ASSUME_ALWAYS_YES=yes pkg update
 exec 5>&1
-# TODO delete ${FOO:-/} for review, now for testing after installation
-pkgerr=$(pkg install $toinstall kde plasma6-plasma wireplumber xorg 2>&1 1>&5)
+pkgerr=$(chroot $BSDINSTALL_CHROOT pkg install $toinstall kde plasma6-plasma wireplumber xorg 2>&1 1>&5)
 retval=$?
 exec 5>&-
 if [ $retval -ne 0 ]; then
