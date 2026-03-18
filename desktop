@@ -309,7 +309,8 @@ esac
 #### SECTION 4: Installation ####
 ASSUME_ALWAYS_YES=yes pkg update
 exec 5>&1
-pkgerr=$(pkg install $toinstall kde plasma6-plasma wireplumber xorg 2>&1 1>&5)
+# TODO delete ${FOO:-/} for review, now for testing after installation
+pkgerr=$(chroot ${BSDINSTALL_CHROOT:-/} pkg install $toinstall kde plasma6-plasma wireplumber xorg 2>&1 1>&5)
 retval=$?
 exec 5>&-
 if [ $retval -ne 0 ]; then
