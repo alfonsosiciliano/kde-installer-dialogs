@@ -307,6 +307,8 @@ Ly:\\
 esac
 
 #### SECTION 4: Installation ####
+# firmware script to know more for pkg and resolv.conf
+cp -f $BSDINSTALL_TMPETC/resolv.conf $BSDINSTALL_CHROOT/etc/
 ASSUME_ALWAYS_YES=yes pkg update
 exec 5>&1
 # TODO delete ${FOO:-/} for review, now for testing after installation
