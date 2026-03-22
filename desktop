@@ -419,6 +419,6 @@ done
 #### SECTION 7: Success Message ####
 bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 	--msgbox "\nDesktop installation completed.\n\nThe ${displaymgr} display
-	manager will start automatically and allow text-based login at the next
-	startup. The enabled users with configured settings are: ${users}." \
+manager will start automatically and allow login at the next startup.
+The enabled users with configured settings are: ${users}." \
 	0 0
