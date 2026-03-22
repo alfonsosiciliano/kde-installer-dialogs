@@ -37,9 +37,9 @@ readonly BSDDIALOG_OK=0
 readonly BSDDIALOG_YES=$BSDDIALOG_OK
 readonly BSDDIALOG_NO=1
 
-readonly XDRIVERFILE=/usr/local/etc/X11/xorg.conf.d/20-generic-driver.conf
+readonly XDRIVERFILE=$BSDINSTALL_CHROOT/usr/local/etc/X11/xorg.conf.d/20-generic-driver.conf
 
-USERS=`chroot $BSDINSTALL_CHROOT pw usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print $1 " \""$8"\" off"}' | sort`
+USERS=`pw -R $BSDINSTALL_CHROOT usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print $1 " \""$8"\" off"}' | sort`
 
 ####
 # 1. Yes-No question and checks.
@@ -133,30 +133,31 @@ gpuconfig=""
 case $gpu in
 	DRM)
 		toinstall="drm-kmod mesa-gallium-va libva-utils libva-intel-media-driver"
-		gpuconfig="sysrc kld_list+=\"i915kms amdgpu radeonkms\""
+		gpuconfig="sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop kld_list+=\"i915kms amdgpu radeonkms\""
 		;;
 	Optimus-Intel)
 		optimus=1
 		;&
 	Intel)
 		toinstall="drm-kmod mesa-gallium-va libva-utils libva-intel-media-driver"
-		gpuconfig="sysrc kld_list+=\"i915kms\""
+		gpuconfig="sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop kld_list+=\"i915kms\""
 		;;
 	AMD)
 		toinstall="drm-kmod mesa-gallium-va libva-utils"
-		gpuconfig="sysrc kld_list+=\"amdgpu\""
+		gpuconfig="sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop kld_list+=\"amdgpu\""
 		;;
 	Radeon)
 		toinstall="drm-kmod mesa-gallium-va libva-utils"
-		gpuconfig="sysrc kld_list+=\"radeonkms\""
+		gpuconfig="sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop kld_list+=\"radeonkms\""
 		;;
 	VirtualBox)
 		toinstall="virtualbox-ose-additions-72"
-		gpuconfig="sysrc vboxguest_enable=\"YES\" ; sysrc vboxservice_enable=\"YES\""
+		gpuconfig="sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop vboxguest_enable=\"YES\"; "
+		gpuconfig="$gpuconfig sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop vboxservice_enable=\"YES\""
 		;;
 	VMware)
 		toinstall="xf86-video-vmware xf86-input-vmmouse open-vm-tools"
-		gpuconfig="sysrc kld_list+=\"fusefs\""
+		gpuconfig="sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop kld_list+=\"fusefs\""
 		;;
 	VESA)
 		toinstall="xf86-video-vesa"
@@ -211,22 +212,22 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 			if [ $? -eq $BSDDIALOG_YES ]; then
 				toinstall="$toinstall nvidia-settings nvidia-xconfig nvidia-texture-tools"
 				toinstall="$toinstall linux-nvidia-libs"
-				gpuconfig="$gpuconfig ; sysrc linux_enable=\"YES\""
+				gpuconfig="$gpuconfig ; sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop linux_enable=\"YES\""
 			fi
 			;;
 		470 | 390)
 			# To test, I have the hardware for 390
-			gpuconfig="$gpuconfig sysrc kld_list+=\"nvidia-modeset\""
+			gpuconfig="$gpuconfig sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop kld_list+=\"nvidia-modeset\""
 			;;
 		340 | 304)
 			# 304 should not support OPTIMUS
 			# Handbook: 304 and 340 with the legacy sc(4) console
 			# driver, and a x11/xorg-server version prior to 1.20.
-			gpuconfig="$gpuconfig sysrc kld_list+=\"nvidia\""
+			gpuconfig="$gpuconfig sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop kld_list+=\"nvidia\""
 			;;
 	esac
 	if [ $version = "nvidia-drm-kmod" -o $optimus ]; then
-		gpuconfig="$gpuconfig ; echo hw.nvidiadrm.modeset=\\\"1\\\" >> /boot/loader.conf"
+		gpuconfig="$gpuconfig ; echo hw.nvidiadrm.modeset=\\\"1\\\" >> $BSDINSTALL_TMPBOOT/loader.conf.desktop"
 	fi
 fi
 
@@ -292,7 +293,7 @@ xsessions = /usr/local/share/xsessions"
 case $displaymgr in
 	SDDM)
 		toinstall="$toinstall sddm"
-		dmgrconfig="sysrc sddm_enable=\"YES\""
+		dmgrconfig="sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop sddm_enable=\"YES\""
 		;;
 	Ly)
 		toinstall="$toinstall ly"
@@ -328,24 +329,21 @@ bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 
 # Delete the previous configurations if this script has been called before
 # using finalconfig menu script.
-sysrc-=" i915kms amdgpu radeonkms nvidia-drm nvidia-modeset nvidia fusefs"
+rm -f $BSDINSTALL_TMPETC/rc.conf.desktop
 rm -f $XDRIVERFILE
-sed -i '' '/hw.nvidiadrm.modeset="1"/d' /boot/loader.conf
-sed -i '' '/# VirtualBox setup/d' /boot/loader.conf
-sed -i '' '/hw.efi.poweroff=0/d' /boot/loader.conf
-sed -i '' '/sddm_enable="YES"/d' /etc/rc.conf
+rm -f $BSDINSTALL_TMPBOOT/loader.conf.desktop
 sed -i '' '/^# Ly manager/,+3d' /etc/gettytab
 cp /usr/local/etc/ly/config.ini.sample /usr/local/etc/ly/config.ini 2>/dev/null
 sed -i '' -e 's|ttyv1.*getty Ly.*|ttyv1\t"/usr/libexec/getty Pc"\t\txterm\tonifexists secure|' /etc/ttys
 
 eval $gpuconfig
-sysrc dbus_enable="YES"
+sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop dbus_enable="YES"
 eval "$dmgrconfig"
-grep -qxF "# KDE setup" /etc/sysctl.conf || {
+{
 	echo "# KDE setup";
 	echo "net.local.stream.recvspace=65536";
 	echo "net.local.stream.sendspace=65536";
-} >> /etc/sysctl.conf
+} > $BSDINSTALL_TMPETC/sysctl.conf.desktop
 
 
 if [ $gpu = VirtualBox ]; then
@@ -359,7 +357,7 @@ if [ $gpu = VirtualBox ]; then
 		{ 
 			echo "# VirtualBox setup";
 			echo "hw.efi.poweroff=0";
-		} >> /boot/loader.conf
+		} > $BSDINSTALL_TMPBOOT/loader.conf.desktop
 	fi
 fi
 
@@ -375,11 +373,11 @@ exec 5>&-
 [ $retval -ne $BSDDIALOG_OK -o -z "$users" ] && exit 0
 
 if [ $gpu != VESA -a $gpu != SCFB -a $gpu != VirtualBox ]; then
-	pw groupmod video -m `echo "$users" | tr ' ' ','`
+	pw -R $BSDINSTALL_CHROOT groupmod video -m `echo "$users" | tr ' ' ','`
 fi
 
 if [ $gpu = VirtualBox ]; then
-	pw groupmod wheel -m `echo "$users" | tr ' ' ','`
+	pw -R $BSDINSTALL_CHROOT groupmod wheel -m `echo "$users" | tr ' ' ','`
 fi
 
 gen_autostart_entry() {
@@ -398,8 +396,8 @@ EOF
 }
 
 for u in $users; do
-	user_home="$(pw usershow ${u} | awk -F: '{print $(NF-1)}')"
-	user_config_dir="/mnt/${user_home}/.config"
+	user_home="$(pw -R $BSDINSTALL_CHROOT usershow ${u} | awk -F: '{print substr($(NF-1), 2)}')"
+	user_config_dir="$BSDINSTALL_CHROOT/${user_home}/.config"
 	mkdir -p "${user_config_dir}/autostart"
 	gen_autostart_entry \
 		'PipeWire Media System' \
@@ -414,7 +412,7 @@ for u in $users; do
 		'Start the PulseAudio Sound System' \
 		'start-pulseaudio-x11' \
 		'Hidden=true' > "${user_config_dir}/autostart/pulseaudio.desktop"
-	chown -R ${u}:${u} "${user_config_dir}"
+	chroot $BSDINSTALL_CHROOT chown -R ${u}:${u} "${user_home}/.config"
 done
 
 #### SECTION 7: Success Message ####
