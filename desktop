@@ -38,7 +38,7 @@ readonly BSDDIALOG_YES=$BSDDIALOG_OK
 readonly BSDDIALOG_NO=1
 
 readonly XDRIVERFILE=/usr/local/etc/X11/xorg.conf.d/20-generic-driver.conf
-
+BOOTMETHOD=`sysctl -n machdep.bootmethod`
 USERS=`pw usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print $1 " \""$8"\" on"}' | sort`
 
 ####
@@ -82,7 +82,6 @@ fi
 
 #### SECTION 2: Select GPU ####
 PKGGPU=`fwget -n -q | grep gpu`
-BOOTMETHOD=`sysctl -n machdep.bootmethod`
 GPU=`pciconf -lv | grep -A 4 vga`
 # F1 help message
 HELPGPU="\ZbSystem firmware boot method\Zn: $BOOTMETHOD
@@ -354,7 +353,7 @@ if [ $gpu = VirtualBox ]; then
 	0 0
 
 	# Useful for poweroff(8). Is this script the right place for this setting?
-	if [ `sysctl -n machdep.bootmethod` = UEFI ]; then
+	if [ $BOOTMETHOD = UEFI ]; then
 		{ 
 			echo "# VirtualBox setup";
 			echo "hw.efi.poweroff=0";
