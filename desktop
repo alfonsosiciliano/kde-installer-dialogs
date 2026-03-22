@@ -232,7 +232,7 @@ fi
 #### SECTION 3: Display Manager ####
 exec 5>&1
 displaymgr=$(bsddialog --backtitle "$OSNAME Installer" --title Desktop \
-	--ok-label Select \
+	--ok-label Select --default-item SDDM \
 	--menu "Select the display manager to enter the nickname and password to log into the system:" \
 	0 0 0 \
 	Ly	"Text User Interface display manager" \
