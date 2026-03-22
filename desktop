@@ -63,13 +63,13 @@ bsddialog --backtitle "$OSNAME Installer" --title Desktop --colors \
 [ $? -ne $BSDDIALOG_YES ] && exit 1
 
 if [ -z "$(hostname)" ]; then
-	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
+	bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 	--ok-label Exit --msgbox "Please set a hostname." 0 0
 	exit 1
 fi
 
 if [ -z "$USERS" ]; then
-	bsddialog --backtitle "FreeBSD Installer" --title Desktop \
+	bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 	--ok-label Exit \
 	--msgbox "No created user accounts were found on this system.
 Although it is possible to run a graphical environment as the root user,
