@@ -118,7 +118,7 @@ gpu=$(bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 	0 NVIDIA        "Proprietary driver"                             ${nvidia-off} \
 	1 Optimus-Intel "Nvidia Optimus and Intel GPU"                   ${optimus-off} \
 	0 VirtualBox    "Oracle VirtualBox virtual machine"              ${virtualbox-off} \
-	0 VMware        "Broadcom virtual machine"                       ${vmware=off} \
+	0 VMware        "Broadcom virtual machine"                       ${vmware-off} \
 	0 VESA          "GPU not supported by other drivers (BIOS)"      ${vesa-off} \
 	0 SCFB          "GPU not supported by other drivers (UEFI)"      ${scfb-off} \
 	2>&1 1>&5)
