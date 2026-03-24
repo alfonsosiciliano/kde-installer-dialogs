@@ -40,6 +40,7 @@ readonly BSDDIALOG_NO=1
 readonly XDRIVERFILE=$BSDINSTALL_CHROOT/usr/local/etc/X11/xorg.conf.d/20-generic-driver.conf
 BOOTMETHOD=`sysctl -n machdep.bootmethod`
 USERS=`pw -R $BSDINSTALL_CHROOT usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print $1 " \""$8"\" on"}' | sort`
+VM=`sysctl -n kern.vm_guest`
 
 ####
 # 1. Yes-No question and checks.
@@ -84,48 +85,61 @@ fi
 PKGGPU=`fwget -n -q | grep gpu`
 GPU=`pciconf -lv | grep -A 4 vga`
 # F1 help message
-HELPGPU="\ZbSystem firmware boot method\Zn: $BOOTMETHOD
-\ZbGPU\Zn: $GPU
-\ZbDetected firmware package\Zn: $PKGGPU"
+HELPGPU="\ZbSystem firmware boot method\ZB: $BOOTMETHOD
+\ZbGPU\ZB: $GPU
+\ZbDetected firmware package\ZB: $PKGGPU"
 # end F1 help message
 
-if [ `sysctl -n kern.vm_guest` = vbox ]; then
-	virtualbox=on
-elif [ `sysctl -n kern.vm_guest` = vmware ]; then
-	vmware=on
+if [ $VM = vbox -a `uname -r | cut -d- -f2-` = CURRENT ]; then
+	msggpu="Detected $OSNAME CURRENT in a VirtualBox virtual machine."
+	[ $BOOTMETHOD == BIOS ] && defaultgpu=VESA || defaultgpu=SCFB
+	msggpu="$msggpu Select \Zb$defaultgpu\ZB to avoid a possible kernel panic."
+elif [ $VM = vbox ]; then
+	defaultgpu=VirtualBox
+	msggpu="Autodetected \ZbVirtualBox\ZB virtual machine,"
+elif [ $VM = vmware ]; then
+	defaultgpu=VMware
+	msggpu="Autodetected \ZbVMware\ZB virtual machine,"
 elif [ "${GPU#*NVIDIA}" != "$GPU" -a "${PKGGPU#*intel}" != "$PKGGPU" ]; then
-	optimus=on
+	defaultgpu=Optimus
+	msggpu="Autodetected a NVIDIA GPU and an Intel GPU, probably \ZbOptimus\ZB,"
 elif [ "${GPU#*NVIDIA}" != "$GPU" ]; then
-	nvidia=on
+	defaultgpu=NVIDIA
+	msggpu="Autodetected a \ZbNVIDIA\ZB GPU,"
 elif [ "${PKGGPU#*intel}" != "$PKGGPU" ]; then
-	intel=on
+	defaultgpu=Intel
+	msggpu="Autodetected an \ZbIntel\ZB GPU,"
 elif [ "${PKGGPU#*amd}" != "$PKGGPU" ]; then
-	amd=on
+	defaultgpu=AMD
+	msggpu="Autodetected an \ZbAMD\ZB GPU"
 elif [ "${PKGGPU#*radeon}" != "$PKGGPU" ]; then
-	radeon=on
+	defaultgpu=Radeon
+	msggpu="Autodetected a \ZbRadeon\ZB GPU,"
 else
-	[ $BOOTMETHOD == BIOS ] && vesa=on || scfb=on
+	msggpu="No graphics driver was detected for your GPU,"
+	[ $BOOTMETHOD == BIOS ] && defaultgpu=VESA || defaultgpu=SCFB
+	msggpu="$msggpu select \Zb$defaultgpu\ZB because your system uses $BOOTMETHOD."
 fi
 exec 5>&1
 gpu=$(bsddialog --backtitle "$OSNAME Installer" --title Desktop \
-	--ok-label Continue \
+	--ok-label Select --default-item $defaultgpu \
 	--colors --hmsg "$HELPGPU" --item-depth \
-	--radiolist "F1 to know your GPU, SPACE to select a driver:" 0 0 0 \
-	0 DRM           "Intel and AMD Metaport"                         off \
-	1 Intel         "Intel APUs starting with HD3000 / Sandy Bridge" ${intel-off} \
-	1 AMD           "AMD GPUs starting with HD7000 / Tahiti"         ${amd-off} \
-	1 Radeon        "Older AMD GPUs (EFI boot should be disabled)"   ${radeon-off} \
-	0 NVIDIA        "Proprietary driver"                             ${nvidia-off} \
-	1 Optimus-Intel "Nvidia Optimus and Intel GPU"                   ${optimus-off} \
-	0 VirtualBox    "Oracle VirtualBox virtual machine"              ${virtualbox-off} \
-	0 VMware        "Broadcom virtual machine"                       ${vmware-off} \
-	0 VESA          "GPU not supported by other drivers (BIOS)"      ${vesa-off} \
-	0 SCFB          "GPU not supported by other drivers (UEFI)"      ${scfb-off} \
+	--menu "Select your graphics card.\n$msggpu F1 to know more." \
+	0 0 0 \
+	0 DRM        "Intel and AMD Metaport" \
+	2 Intel      "Intel APUs starting with HD3000 / Sandy Bridge" \
+	2 AMD        "AMD GPUs starting with HD7000 / Tahiti" \
+	2 Radeon     "Older AMD GPUs (EFI boot should be disabled)" \
+	0 NVIDIA     "Proprietary driver" \
+	2 Optimus    "Nvidia Optimus and Intel GPU" \
+	0 VirtualBox "Oracle VirtualBox virtual machine" \
+	0 VMware     "Broadcom virtual machine" \
+	0 VESA       "GPU not supported by other drivers (BIOS)" \
+	0 SCFB       "GPU not supported by other drivers (UEFI)" \
 	2>&1 1>&5)
 retval=$?
 exec 5>&-
 [ $retval -ne $BSDDIALOG_OK ] && exit 1
-[ -z $gpu ] && exit 0
 
 toinstall=""
 gpuconfig=""
@@ -134,7 +148,7 @@ case $gpu in
 		toinstall="drm-kmod mesa-gallium-va libva-utils libva-intel-media-driver"
 		gpuconfig="sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop kld_list+=\"i915kms amdgpu radeonkms\""
 		;;
-	Optimus-Intel)
+	Optimus)
 		optimus=1
 		;&
 	Intel)
@@ -170,7 +184,7 @@ esac
 
 HELPGPU="$HELPGPU
 
-\ZbSupported GPUs\Zn:
+\ZbNVIDIA driver and supported GPUs\ZB:
  * nvidia-drm-drm (580): \Zuhttps://www.nvidia.com/en-us/drivers/details/210651/\Zn
  * nvidia-driver-470: \Zuhttps://www.nvidia.com/en-us/drivers/details/194639/\Zn
  * nvidia-driver-390: \Zuhttps://www.nvidia.com/en-us/drivers/details/191122/\Zn
@@ -179,22 +193,21 @@ HELPGPU="$HELPGPU
 
 if [ $gpu = NVIDIA -o $optimus ]; then
 	# 580 no in handbook.
-	items="nvidia-drm-kmod 'Proprietary driver version 580 for recent GPUs' off \
-	nvidia-driver-470 'Old proprietary driver version 470' off \
-	nvidia-driver-390 'Old proprietary driver version 390' off \
-	nvidia-driver-340 'Old proprietary driver version 340' off \
-	nvidia-driver-304 'Old proprietary driver version 304' off"
+	items="nvidia-drm-kmod 'Proprietary driver version 580 for recent GPUs' \
+	nvidia-driver-470 'Old proprietary driver version 470' \
+	nvidia-driver-390 'Old proprietary driver version 390' \
+	nvidia-driver-340 'Old proprietary driver version 340' \
+	nvidia-driver-304 'Old proprietary driver version 304'"
 
 	exec 5>&1
 	gpu=$(echo $items | xargs -o bsddialog --backtitle "$OSNAME Installer" \
 		--title Desktop --ok-label Continue --colors --hmsg "$HELPGPU" \
-		--radiolist "F1 to know your GPU and which driver supports it.
-		SPACE to select a driver." \
+		--menu "F1 to know your GPU and which driver supports it." \
 		0 0 0 \
 		2>&1 1>&5)
 	retval=$?
 	exec 5>&-
-	[ $retval -ne $BSDDIALOG_OK -o -z $gpu ] && exit 0
+	[ $retval -ne $BSDDIALOG_OK ] && exit 1
 
 	toinstall="$toinstall $gpu"
 	gpuconfig="${gpuconfig:+"$gpuconfig ; "}"
