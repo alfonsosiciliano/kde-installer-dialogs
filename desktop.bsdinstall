@@ -2,7 +2,7 @@
 #-
 # SPDX-License-Identifier: BSD-2-Clause
 #
-# Copyright (c) 2025-2026 The FreeBSD Foundation
+# Copyright (c) 2026 The FreeBSD Foundation
 #
 # This software was developed by Alfonso Sabato Siciliano
 # under sponsorship from the FreeBSD Foundation.
@@ -29,15 +29,15 @@
 # SUCH DAMAGE.
 #
 
-# Include for $OSNAME
+# Include only for $OSNAME
 BSDCFG_SHARE="/usr/share/bsdconfig"
 . $BSDCFG_SHARE/common.subr || exit 1
 
-readonly BSDDIALOG_OK=0
-readonly BSDDIALOG_YES=$BSDDIALOG_OK
-readonly BSDDIALOG_NO=1
+: {BSDDIALOG_OK=0}
+: {BSDDIALOG_YES=$BSDDIALOG_OK}
+: {BSDDIALOG_NO=1}
 
-readonly XDRIVERFILE=$BSDINSTALL_CHROOT/usr/local/etc/X11/xorg.conf.d/20-generic-driver.conf
+XDRIVERFILE=$BSDINSTALL_CHROOT/usr/local/etc/X11/xorg.conf.d/20-generic-driver.conf
 BOOTMETHOD=`sysctl -n machdep.bootmethod`
 USERS=`pw -R $BSDINSTALL_CHROOT usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print $1 " \""$8"\" on"}' | sort`
 VM=`sysctl -n kern.vm_guest`
