@@ -200,7 +200,7 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 
 	exec 5>&1
 	gpu=$(echo $items | xargs -o bsddialog --backtitle "$OSNAME Installer" \
-		--title Desktop --ok-label Continue --colors --hmsg "$HELPGPU" \
+		--title Desktop --ok-label Select --colors --hmsg "$HELPGPU" \
 		--menu "F1 to know your GPU and which driver supports it." \
 		0 0 0 \
 		2>&1 1>&5)
