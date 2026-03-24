@@ -33,9 +33,9 @@
 BSDCFG_SHARE="/usr/share/bsdconfig"
 . $BSDCFG_SHARE/common.subr || exit 1
 
-: {BSDDIALOG_OK=0}
-: {BSDDIALOG_YES=$BSDDIALOG_OK}
-: {BSDDIALOG_NO=1}
+: ${BSDDIALOG_OK=0}
+: ${BSDDIALOG_YES=$BSDDIALOG_OK}
+: ${BSDDIALOG_NO=1}
 
 XDRIVERFILE=$BSDINSTALL_CHROOT/usr/local/etc/X11/xorg.conf.d/20-generic-driver.conf
 BOOTMETHOD=`sysctl -n machdep.bootmethod`
