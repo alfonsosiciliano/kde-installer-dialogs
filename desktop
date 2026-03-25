@@ -369,20 +369,12 @@ grep -qxF "# KDE setup" /etc/sysctl.conf || {
 	echo "net.local.stream.sendspace=65536";
 } >> /etc/sysctl.conf
 
-
-if [ $gpu = VirtualBox ]; then
-	bsddialog --backtitle "$OSNAME Installer" --title Desktop \
-	--msgbox "VirtualBox setting: select VBoxSVGA as graphics controller,
-	and disable 3D acceleration." \
-	0 0
-
-	# Useful for poweroff(8). Is this script the right place for this setting?
-	if [ $BOOTMETHOD = UEFI ]; then
-		{ 
-			echo "# VirtualBox setup";
-			echo "hw.efi.poweroff=0";
-		} >> /boot/loader.conf
-	fi
+# Useful for poweroff(8). Is this script the right place for this setting?
+if [ $gpu = VirtualBox -a $BOOTMETHOD = UEFI ]; then
+	{ 
+		echo "# VirtualBox setup";
+		echo "hw.efi.poweroff=0";
+	} >> /boot/loader.conf
 fi
 
 #### SECTION 6: For User Configuration ####
@@ -440,8 +432,19 @@ for u in $users; do
 done
 
 #### SECTION 7: Success Message ####
-bsddialog --backtitle "$OSNAME Installer" --title Desktop \
-	--msgbox "\nDesktop installation completed.\n\nThe ${displaymgr} display
-manager will start automatically and allow login at the next startup.
-The enabled users with configured settings are: ${users}." \
-	0 0
+users=`echo "$users" | sed 's/ /, /g'`
+
+finalmsg="Desktop installation completed.\n\n
+The ${displaymgr} display manager will start automatically and allow login at
+the next startup. The enabled users with configured settings are:
+\Zb${users}\Zb."
+
+gpu=VirtualBox
+if [ $gpu = VirtualBox ]; then
+	finalmsg="$finalmsg\n\n\
+\ZbTIP\ZB. VirtualBox setting: select VBoxSVGA as graphics controller, and
+disable 3D acceleration."
+fi
+
+bsddialog --backtitle "$OSNAME Installer" --title Desktop --colors \
+	--msgbox "$finalmsg" 0 0

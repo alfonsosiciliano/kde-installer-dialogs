@@ -369,20 +369,12 @@ eval "$dmgrconfig"
 	echo "net.local.stream.sendspace=65536";
 } > $BSDINSTALL_TMPETC/sysctl.conf.desktop
 
-
-if [ $gpu = VirtualBox ]; then
-	bsddialog --backtitle "$OSNAME Installer" --title Desktop \
-	--msgbox "VirtualBox setting: select VBoxSVGA as graphics controller,
-	and disable 3D acceleration." \
-	0 0
-
-	# Useful for poweroff(8). Is this script the right place for this setting?
-	if [ $BOOTMETHOD = UEFI ]; then
-		{ 
-			echo "# VirtualBox setup";
-			echo "hw.efi.poweroff=0";
-		} > $BSDINSTALL_TMPBOOT/loader.conf.desktop
-	fi
+# Useful for poweroff(8). Is this script the right place for this setting?
+if [ $BOOTMETHOD = UEFI ]; then
+	{ 
+		echo "# VirtualBox setup";
+		echo "hw.efi.poweroff=0";
+	} > $BSDINSTALL_TMPBOOT/loader.conf.desktop
 fi
 
 #### SECTION 6: For User Configuration ####
@@ -440,8 +432,19 @@ for u in $users; do
 done
 
 #### SECTION 7: Success Message ####
-bsddialog --backtitle "$OSNAME Installer" --title Desktop \
-	--msgbox "\nDesktop installation completed.\n\nThe ${displaymgr} display
-manager will start automatically and allow login at the next startup.
-The enabled users with configured settings are: ${users}." \
-	0 0
+users=`echo "$users" | sed 's/ /, /g'`
+
+finalmsg="Desktop installation completed.\n\n
+The ${displaymgr} display manager will start automatically and allow login at
+the next startup. The enabled users with configured settings are:
+\Zb${users}\Zb."
+
+gpu=VirtualBox
+if [ $gpu = VirtualBox ]; then
+	finalmsg="$finalmsg\n\n\
+\ZbTIP\ZB. VirtualBox setting: select VBoxSVGA as graphics controller, and
+disable 3D acceleration."
+fi
+
+bsddialog --backtitle "$OSNAME Installer" --title Desktop --colors \
+	--msgbox "$finalmsg" 0 0
