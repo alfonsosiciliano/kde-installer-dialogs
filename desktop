@@ -302,6 +302,11 @@ xauth_cmd = /usr/local/bin/xauth
 xinitrc = ~/.xinitrc
 xsessions = /usr/local/share/xsessions"
 
+LYGETTYTAB='# Ly manager
+Ly:\\
+:lo=/usr/local/bin/ly_wrapper:\\
+:al=root:'
+
 case $displaymgr in
 	SDDM)
 		toinstall="$toinstall sddm"
@@ -311,10 +316,7 @@ case $displaymgr in
 		toinstall="$toinstall ly"
 		dmgrconfig="sed -i '' -e 's|ttyv1.*getty Pc.*|ttyv1 \"/usr/libexec/getty Ly\" xterm on secure|' /etc/ttys"
 		dmgrconfig="$dmgrconfig ; echo \"$LYINI\" > /usr/local/etc/ly/config.ini"
-		dmgrconfig="$dmgrconfig ; "'echo "# Ly manager
-Ly:\\
-:lo=/usr/local/bin/ly_wrapper:\\
-:al=root:" >> /etc/gettytab'
+		dmgrconfig="$dmgrconfig ; echo '$LYGETTYTAB' >> /etc/gettytab"
 		;;
 esac
 

@@ -303,6 +303,11 @@ xauth_cmd = /usr/local/bin/xauth
 xinitrc = ~/.xinitrc
 xsessions = /usr/local/share/xsessions"
 
+LYGETTYTAB='# Ly manager
+Ly:\\
+:lo=/usr/local/bin/ly_wrapper:\\
+:al=root:'
+
 case $displaymgr in
 	SDDM)
 		toinstall="$toinstall sddm"
@@ -310,12 +315,9 @@ case $displaymgr in
 		;;
 	Ly)
 		toinstall="$toinstall ly"
-		dmgrconfig="sed -i '' -e 's|ttyv1.*getty Pc.*|ttyv1 \"/usr/libexec/getty Ly\" xterm on secure|' /etc/ttys"
-		dmgrconfig="$dmgrconfig ; echo \"$LYINI\" > /usr/local/etc/ly/config.ini"
-		dmgrconfig="$dmgrconfig ; "'echo "# Ly manager
-Ly:\\
-:lo=/usr/local/bin/ly_wrapper:\\
-:al=root:" >> /etc/gettytab'
+		dmgrconfig="sed -i '' -e 's|ttyv1.*getty Pc.*|ttyv1 \"/usr/libexec/getty Ly\" xterm on secure|' $BSDINSTALL_CHROOT/etc/ttys"
+		dmgrconfig="$dmgrconfig ; echo \"$LYINI\" > $BSDINSTALL_CHROOT/usr/local/etc/ly/config.ini"
+		dmgrconfig="$dmgrconfig ; echo '$LYGETTYTAB' >> $BSDINSTALL_CHROOT/etc/gettytab"
 		;;
 esac
 
@@ -345,9 +347,9 @@ bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 rm -f $BSDINSTALL_TMPETC/rc.conf.desktop
 rm -f $XDRIVERFILE
 rm -f $BSDINSTALL_TMPBOOT/loader.conf.desktop
-sed -i '' '/^# Ly manager/,+3d' /etc/gettytab
-cp /usr/local/etc/ly/config.ini.sample /usr/local/etc/ly/config.ini 2>/dev/null
-sed -i '' -e 's|ttyv1.*getty Ly.*|ttyv1\t"/usr/libexec/getty Pc"\t\txterm\tonifexists secure|' /etc/ttys
+sed -i '' '/^# Ly manager/,+3d' $BSDINSTALL_CHROOT/etc/gettytab
+cp $BSDINSTALL_CHROOT/usr/local/etc/ly/config.ini.sample $BSDINSTALL_CHROOT/usr/local/etc/ly/config.ini 2>/dev/null
+sed -i '' -e 's|ttyv1.*getty Ly.*|ttyv1\t"/usr/libexec/getty Pc"\t\txterm\tonifexists secure|' $BSDINSTALL_CHROOT/etc/ttys
 
 eval $gpuconfig
 sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop dbus_enable="YES"
