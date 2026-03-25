@@ -41,6 +41,7 @@ XDRIVERFILE=$BSDINSTALL_CHROOT/usr/local/etc/X11/xorg.conf.d/20-generic-driver.c
 BOOTMETHOD=`sysctl -n machdep.bootmethod`
 USERS=`pw -R $BSDINSTALL_CHROOT usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print $1 " \""$8"\" on"}' | sort`
 VM=`sysctl -n kern.vm_guest`
+ARCH=`uname -p`
 
 ####
 # 1. Yes-No question and checks.
@@ -90,7 +91,16 @@ HELPGPU="\ZbSystem firmware boot method\ZB: $BOOTMETHOD
 \ZbDetected firmware package\ZB: $PKGGPU"
 # end F1 help message
 
-if [ $VM = vbox -a `uname -r | cut -d- -f2-` = CURRENT ]; then
+if [ $ARCH != amd64 -a $ARCH != aarch64 -a $ARCH != armv7 ]; then
+	bsddialog --backtitle "$OSNAME Installer" --title Desktop \
+		--ok-label Exit \
+		--msgbox "Sorry no GPU driver for the $ARCH architecture." 0 0
+	exit 1
+elif [ $ARCH = aarch64 -o $ARCH = armv7 ]; then
+	[ $BOOTMETHOD == BIOS ] && defaultgpu=VESA || defaultgpu=SCFB
+	msggpu="Select \Zb$defaultgpu\ZB because it is the only driver\
+	supported with $ARCH and $BOOTMETHOD."
+elif [ $VM = vbox -a `uname -r | cut -d- -f2-` = CURRENT ]; then
 	msggpu="Detected $OSNAME CURRENT in a VirtualBox virtual machine."
 	[ $BOOTMETHOD == BIOS ] && defaultgpu=VESA || defaultgpu=SCFB
 	msggpu="$msggpu Select \Zb$defaultgpu\ZB to avoid a possible kernel panic."
@@ -257,7 +267,6 @@ retval=$?
 exec 5>&-
 [ $retval -ne $BSDDIALOG_OK ] && exit 1
 
-# Ly ini, should be added to the x11/ly port?
 LYINI="allow_empty_password = true
 animation = none
 asterisk = *
