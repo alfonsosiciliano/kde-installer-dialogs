@@ -440,7 +440,6 @@ The ${displaymgr} display manager will start automatically and allow login at
 the next startup. The enabled users with configured settings are:
 \Zb${users}\Zb."
 
-gpu=VirtualBox
 if [ $gpu = VirtualBox ]; then
 	finalmsg="$finalmsg\n\n\
 \ZbTIP\ZB. VirtualBox setting: select VBoxSVGA as graphics controller, and
