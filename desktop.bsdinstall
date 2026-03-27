@@ -372,7 +372,7 @@ eval "$dmgrconfig"
 
 # Useful for poweroff(8). Is this script the right place for this setting?
 if [ $BOOTMETHOD = UEFI ]; then
-	{ 
+	{
 		echo "# VirtualBox setup";
 		echo "hw.efi.poweroff=0";
 	} > $BSDINSTALL_TMPBOOT/loader.conf.desktop

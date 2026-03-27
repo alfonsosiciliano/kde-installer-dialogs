@@ -372,7 +372,7 @@ grep -qxF "# KDE setup" /etc/sysctl.conf || {
 
 # Useful for poweroff(8). Is this script the right place for this setting?
 if [ $gpu = VirtualBox -a $BOOTMETHOD = UEFI ]; then
-	{ 
+	{
 		echo "# VirtualBox setup";
 		echo "hw.efi.poweroff=0";
 	} >> /boot/loader.conf
