@@ -414,7 +414,7 @@ EOF
 
 for u in $users; do
 	user_home="$(pw usershow ${u} | awk -F: '{print $(NF-1)}')"
-	user_config_dir="/mnt/${user_home}/.config"
+	user_config_dir="${user_home}/.config"
 	mkdir -p "${user_config_dir}/autostart"
 	gen_autostart_entry \
 		'PipeWire Media System' \
