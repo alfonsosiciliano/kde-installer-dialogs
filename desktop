@@ -183,11 +183,11 @@ case $gpu in
 		;;
 	VESA)
 		toinstall="xf86-video-vesa"
-		gpuconfig="printf 'Section \"Device\"\n\tIdentifier \"Card0\"\n\tDriver \"vesa\"\nEndSection' >> $XDRIVERFILE"
+		gpuconfig="printf 'Section \"Device\"\n\tIdentifier \"Card0\"\n\tDriver \"vesa\"\nEndSection' > $XDRIVERFILE"
 		;;
 	SCFB)
 		toinstall="xf86-video-scfb"
-		gpuconfig="printf 'Section \"Device\"\n\tIdentifier \"Card0\"\n\tDriver \"scfb\"\nEndSection' >> $XDRIVERFILE"
+		gpuconfig="printf 'Section \"Device\"\n\tIdentifier \"Card0\"\n\tDriver \"scfb\"\nEndSection' > $XDRIVERFILE"
 		;;
 esac
 
@@ -249,7 +249,7 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 			;;
 	esac
 	if [ $version = "nvidia-drm-kmod" -o $optimus ]; then
-		gpuconfig="$gpuconfig ; echo hw.nvidiadrm.modeset=\\\"1\\\" >> /boot/loader.conf"
+		gpuconfig="$gpuconfig ; printf 'hw.nvidiadrm.modeset=\"1\"' >> /boot/loader.conf"
 	fi
 fi
 
