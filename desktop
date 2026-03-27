@@ -387,7 +387,7 @@ users=$(echo ${USERS} | xargs -o bsddialog --backtitle "$OSNAME Installer" \
 	2>&1 1>&5)
 retval=$?
 exec 5>&-
-[ $retval -ne $BSDDIALOG_OK -o -z "$users" ] && exit 0
+[ $retval -ne $BSDDIALOG_OK ] && exit 1
 
 if [ $gpu != VESA -a $gpu != SCFB -a $gpu != VirtualBox ]; then
 	pw groupmod video -m `echo "$users" | tr ' ' ','`
