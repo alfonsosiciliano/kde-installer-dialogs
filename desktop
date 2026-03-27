@@ -237,10 +237,11 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 			fi
 			;;
 		470 | 390)
-			# To test, I have the hardware for 390
+			# Old hardware, 2011. Still useful?
 			gpuconfig="$gpuconfig sysrc kld_list+=\"nvidia-modeset\""
 			;;
 		340 | 304)
+			# Old hardware. Still useful?
 			# 304 should not support OPTIMUS
 			# Handbook: 304 and 340 with the legacy sc(4) console
 			# driver, and a x11/xorg-server version prior to 1.20.
