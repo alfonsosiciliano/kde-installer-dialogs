@@ -350,7 +350,7 @@ eval "$dmgrconfig"
 } > $BSDINSTALL_TMPETC/sysctl.conf.desktop
 
 # Useful for poweroff(8). Is this script the right place for this setting?
-if [ $BOOTMETHOD = UEFI ]; then
+if [ $gpu = VirtualBox -a $BOOTMETHOD = UEFI ]; then
 	{
 		echo "# VirtualBox setup";
 		echo "hw.efi.poweroff=0";
