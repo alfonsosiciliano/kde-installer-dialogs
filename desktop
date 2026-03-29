@@ -361,8 +361,8 @@ fi
 bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 	--infobox "Create and update configuration files" 0 0
 
-# Delete the previous configurations if this script has been called before
-# using finalconfig menu script.
+# Remove previous configurations to prevent duplicate or conflicting settings
+# if this script has already been executed via the finalconfig menu.
 sysrc-=" i915kms amdgpu radeonkms nvidia-drm nvidia-modeset nvidia fusefs"
 rm -f $XDRIVERFILE
 sed -i '' '/hw.nvidiadrm.modeset="1"/d' /boot/loader.conf

@@ -343,8 +343,8 @@ fi
 bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 	--infobox "Create and update configuration files" 0 0
 
-# Delete the previous configurations if this script has been called before
-# using finalconfig menu script.
+# Remove previous configurations to prevent duplicate or conflicting settings
+# if this script has already been executed via the finalconfig menu.
 rm -f $BSDINSTALL_TMPETC/rc.conf.desktop
 rm -f $XDRIVERFILE
 rm -f $BSDINSTALL_TMPBOOT/loader.conf.desktop
