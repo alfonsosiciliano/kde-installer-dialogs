@@ -42,6 +42,7 @@ BOOTMETHOD=`sysctl -n machdep.bootmethod`
 USERS=`pw usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print $1 " \""$8"\" on"}' | sort`
 VM=`sysctl -n kern.vm_guest`
 ARCH=`uname -p`
+VERSION=`uname -r | cut -d- -f2-`
 
 ####
 # 1. Yes-No question and checks.
@@ -54,14 +55,23 @@ ARCH=`uname -p`
 ####
 
 #### SECTION 1: Yes-No question and Checks ####
-bsddialog --backtitle "$OSNAME Installer" --title Desktop --colors \
-	--yesno "FreeBSD provides a variety of graphical environments that can
+question="FreeBSD provides a variety of graphical environments that can
 be easily installed through ports and packages. Refer to the FreeBSD Handbook
 available at \Zuhttps://docs.freebsd.org\Zn.\n\nWould you like to install the
 GPU drivers, Xorg, KDE Plasma, and a display manager now, and have them start
 automatically at the next system reboot?\n\nPlease note this is an experimental
-feature." \
-	0 0
+feature."
+
+# This is a script for inexperienced users, so add  a warning in case the
+# CURRENT is installed by mistake.
+if [ $VERSION = CURRENT ]; then
+	question="$question You are installing FreeBSD CURRENT, the development
+version of the system, so unexpected results or errors may occur now or after
+installation."
+
+fi
+bsddialog --backtitle "$OSNAME Installer" --title Desktop --colors \
+	--yesno  "$question" 0 0
 [ $? -ne $BSDDIALOG_YES ] && exit 1
 
 if [ -z "`hostname`" ]; then
@@ -91,6 +101,8 @@ HELPGPU="\ZbSystem firmware boot method\ZB: $BOOTMETHOD
 \ZbDetected firmware package\ZB: $PKGGPU"
 # end F1 help message
 
+# Is this check really necessary? Non-amd64 users are probably experienced,
+# so they already know what and how to do to install a graphical environment.
 if [ $ARCH != amd64 -a $ARCH != aarch64 -a $ARCH != armv7 ]; then
 	bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 		--ok-label Exit \
@@ -100,7 +112,7 @@ elif [ $ARCH = aarch64 -o $ARCH = armv7 ]; then
 	[ $BOOTMETHOD == BIOS ] && defaultgpu=VESA || defaultgpu=SCFB
 	msggpu="Select \Zb$defaultgpu\ZB because it is the only driver\
 	supported with $ARCH and $BOOTMETHOD."
-elif [ $VM = vbox -a `uname -r | cut -d- -f2-` = CURRENT ]; then
+elif [ $VM = vbox -a $VERSION = CURRENT ]; then
 	msggpu="Detected $OSNAME CURRENT in a VirtualBox virtual machine."
 	[ $BOOTMETHOD == BIOS ] && defaultgpu=VESA || defaultgpu=SCFB
 	msggpu="$msggpu Select \Zb$defaultgpu\ZB to avoid a possible kernel panic."
