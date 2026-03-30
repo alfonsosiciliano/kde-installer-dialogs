@@ -192,6 +192,8 @@ HELPGPU="$HELPGPU
  * nvidia-driver-340: \Zuhttps://www.nvidia.com/en-us/drivers/details/156167/\Zn
  * nvidia-driver-304: \Zuhttps://www.nvidia.com/en-us/drivers/details/123712/\Zn"
 
+# TODO: test Optimus with recent GPU cards. Maybe ddd a dialog to suggest that
+# the user use NVIDIA rendering instead of Intel?
 if [ $gpu = NVIDIA -o $optimus ]; then
 	# 580 no in handbook.
 	items="nvidia-drm-kmod 'Proprietary driver version 580 for recent GPUs' \
