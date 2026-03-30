@@ -33,11 +33,14 @@ Screenshots
 
 ![Menu to choose gpu driver to install](screenshots/2_img.png)
 
-**Progress installation**
+**Display manager**
 
-![Bar shows installation progress](screenshots/3_img.png)
+![Menu ti select display manager](screenshots/3_img.png)
 
 **Enable users**
 
 ![Checklist to add users to video group](screenshots/4_img.png)
 
+**Final message**
+
+![Success message with list of enabled users](screenshots/5_img.png)
