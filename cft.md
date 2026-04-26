@@ -78,7 +78,7 @@ or a
 | 15.0-RELEASE 1500068 | Nvidia Geforce GTX 1070    | Nvidia | PC, [report](https://gitlab.com/alfix/kde-installer-dialogs/-/merge_requests/8) |
 | 15.0-RELEASE-p2 1500068 | NVIDIA GeForce GTX 1650 Ti Mobile  |  nvidia-drm  | Thinkpad X1 Extreme Gen3 |
 | 15.0-RELEASE-p3 1500068 | Intel UHD Graphics 770 | Intel | ThinkCentre M80q Gen 3 |
-|  15.0-RELEASE-p5 1500068 |  Intel HD 620 & Nvidia Quadro P500 | Optimus |  Lenovo P52s (2018) |
+| 15.0-RELEASE-p5 1500068 |  Intel HD 620 & Nvidia Quadro P500 | Optimus |  Lenovo P52s (2018) |
 |                 |     |        |       |
 |                 |     |        |       |
 |                 |     |        |       |
