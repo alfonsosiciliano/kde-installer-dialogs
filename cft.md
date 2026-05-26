@@ -79,6 +79,7 @@ or a
 | 15.0-RELEASE-p2 1500068 | NVIDIA GeForce GTX 1650 Ti Mobile  |  nvidia-drm  | Thinkpad X1 Extreme Gen3 |
 | 15.0-RELEASE-p3 1500068 | Intel UHD Graphics 770 | Intel | ThinkCentre M80q Gen 3 |
 | 15.0-RELEASE-p5 1500068 |  Intel HD 620 & Nvidia Quadro P500 | Optimus |  Lenovo P52s (2018) |
+| 15.1-RC1 1501000 | Intel UHD Graphics 620 | Intel | Latitude 7490 |
 |                 |     |        |       |
 |                 |     |        |       |
 |                 |     |        |       |
