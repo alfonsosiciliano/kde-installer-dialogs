@@ -1,12 +1,11 @@
 #!/bin/sh
-#-
-# SPDX-License-Identifier: BSD-2-Clause
 #
 # Copyright (c) 2026 The FreeBSD Foundation
 #
+# SPDX-License-Identifier: BSD-2-Clause
+#
 # This software was developed by Alfonso Sabato Siciliano
 # <asiciliano@FreeBSD.org> under sponsorship from the FreeBSD Foundation.
-#
 
 # Include only for $OSNAME
 BSDCFG_SHARE="/usr/share/bsdconfig"
