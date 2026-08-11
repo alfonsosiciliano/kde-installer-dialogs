@@ -1,0 +1,443 @@
+#!/bin/sh
+#-
+# SPDX-License-Identifier: BSD-2-Clause
+#
+# Copyright (c) 2026 The FreeBSD Foundation
+#
+# This software was developed by Alfonso Sabato Siciliano
+# <asiciliano@FreeBSD.org> under sponsorship from the FreeBSD Foundation.
+#
+
+# Include only for $OSNAME
+BSDCFG_SHARE="/usr/share/bsdconfig"
+. $BSDCFG_SHARE/common.subr || exit 1
+
+: ${BSDDIALOG_OK=0}
+: ${BSDDIALOG_YES=$BSDDIALOG_OK}
+: ${BSDDIALOG_NO=1}
+
+XDRIVERFILE=$BSDINSTALL_CHROOT/usr/local/etc/X11/xorg.conf.d/20-generic-driver.conf
+BOOTMETHOD=`sysctl -n machdep.bootmethod`
+USERS=`pw -R $BSDINSTALL_CHROOT usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print $1 " \""$8"\" on"}' | sort`
+VM=`sysctl -n kern.vm_guest`
+ARCH=`uname -p`
+VERSION=`uname -r | cut -d- -f2-`
+
+####
+# 1. Yes-No question and checks.
+# 2. Select GPU driver.
+# 3. Select display manager.
+# 4. Installation.
+# 5. Global configuration.
+# 6. Configuration for users.
+# 7. Success message.
+####
+
+#### SECTION 1: Yes-No question and Checks ####
+question="FreeBSD provides a variety of graphical environments that can
+be easily installed through ports and packages. Refer to the FreeBSD Handbook
+available at \Zuhttps://docs.freebsd.org\Zn.\n\nWould you like to install the
+GPU drivers, Xorg, KDE Plasma, and a display manager now, and have them start
+automatically at the next system reboot?\n\nPlease note this is an experimental
+feature."
+
+# This is a script for inexperienced users, so add  a warning in case the
+# CURRENT is installed by mistake.
+if [ $VERSION = CURRENT ]; then
+	question="$question You are installing FreeBSD CURRENT, the development
+version of the system, so unexpected results or errors may occur now or after
+installation."
+fi
+
+bsddialog --backtitle "$OSNAME Installer" --title Desktop --colors \
+	--yesno  "$question" 0 0
+[ $? -ne $BSDDIALOG_YES ] && exit 1
+
+if [ -z "`hostname`" ]; then
+	bsddialog --backtitle "$OSNAME Installer" --title Desktop \
+	--ok-label Exit --msgbox "Please set a hostname." 0 0
+	exit 1
+fi
+
+if [ -z "$USERS" ]; then
+	bsddialog --backtitle "$OSNAME Installer" --title Desktop \
+	--ok-label Exit \
+	--msgbox "No created user accounts were found on this system.
+Although it is possible to run a graphical environment as the root user,
+it is strongly discouraged for security reasons.\n\n
+Please create at least one regular user account before launching this module
+to install a graphical desktop environment." \
+	0 0
+	exit 1
+fi
+
+#### SECTION 2: Select GPU ####
+PKGGPU=`fwget -n -q | grep gpu`
+GPU=`pciconf -lv | grep -A 4 vga`
+# F1 help message
+HELPGPU="\ZbSystem firmware boot method\ZB: $BOOTMETHOD
+\ZbGPU\ZB: $GPU
+\ZbDetected firmware package\ZB: $PKGGPU"
+# end F1 help message
+
+# Is this check really necessary? Non-amd64 users are probably experienced,
+# so they already know what and how to do to install a graphical environment.
+if [ $ARCH != amd64 -a $ARCH != aarch64 -a $ARCH != armv7 ]; then
+	bsddialog --backtitle "$OSNAME Installer" --title Desktop \
+		--ok-label Exit \
+		--msgbox "Sorry no GPU driver for the $ARCH architecture." 0 0
+	exit 1
+elif [ $ARCH = aarch64 -o $ARCH = armv7 ]; then
+	[ $BOOTMETHOD == BIOS ] && defaultgpu=VESA || defaultgpu=SCFB
+	msggpu="Select \Zb$defaultgpu\ZB because it is the only driver\
+	supported with $ARCH and $BOOTMETHOD."
+elif [ $VM = vbox -a $VERSION = CURRENT ]; then
+	msggpu="Detected $OSNAME CURRENT in a VirtualBox virtual machine."
+	[ $BOOTMETHOD == BIOS ] && defaultgpu=VESA || defaultgpu=SCFB
+	msggpu="$msggpu Select \Zb$defaultgpu\ZB to avoid a possible kernel panic."
+elif [ $VM = vbox ]; then
+	defaultgpu=VirtualBox
+	msggpu="Autodetected \ZbVirtualBox\ZB virtual machine,"
+elif [ $VM = vmware ]; then
+	defaultgpu=VMware
+	msggpu="Autodetected \ZbVMware\ZB virtual machine,"
+elif [ "${GPU#*NVIDIA}" != "$GPU" -a "${PKGGPU#*intel}" != "$PKGGPU" ]; then
+	defaultgpu=Optimus
+	msggpu="Autodetected a NVIDIA GPU and an Intel GPU, probably \ZbOptimus\ZB,"
+elif [ "${GPU#*NVIDIA}" != "$GPU" ]; then
+	defaultgpu=NVIDIA
+	msggpu="Autodetected a \ZbNVIDIA\ZB GPU,"
+elif [ "${PKGGPU#*intel}" != "$PKGGPU" ]; then
+	defaultgpu=Intel
+	msggpu="Autodetected an \ZbIntel\ZB GPU,"
+elif [ "${PKGGPU#*amd}" != "$PKGGPU" ]; then
+	defaultgpu=AMD
+	msggpu="Autodetected an \ZbAMD\ZB GPU"
+elif [ "${PKGGPU#*radeon}" != "$PKGGPU" ]; then
+	defaultgpu=Radeon
+	msggpu="Autodetected a \ZbRadeon\ZB GPU,"
+else
+	msggpu="No graphics driver was detected for your GPU,"
+	[ $BOOTMETHOD == BIOS ] && defaultgpu=VESA || defaultgpu=SCFB
+	msggpu="$msggpu select \Zb$defaultgpu\ZB because your system uses $BOOTMETHOD."
+fi
+exec 5>&1
+gpu=$(bsddialog --backtitle "$OSNAME Installer" --title Desktop \
+	--ok-label Select --default-item $defaultgpu \
+	--colors --hmsg "$HELPGPU" --item-depth \
+	--menu "Select your graphics card.\n$msggpu F1 to know more." \
+	0 0 0 \
+	0 DRM        "Intel and AMD Metaport" \
+	2 Intel      "Intel APUs starting with HD3000 / Sandy Bridge" \
+	2 AMD        "AMD GPUs starting with HD7000 / Tahiti" \
+	2 Radeon     "Older AMD GPUs (EFI boot should be disabled)" \
+	0 NVIDIA     "Proprietary driver" \
+	2 Optimus    "Nvidia Optimus and Intel GPU" \
+	0 VirtualBox "Oracle VirtualBox virtual machine" \
+	0 VMware     "Broadcom virtual machine" \
+	0 VESA       "GPU not supported by other drivers (BIOS)" \
+	0 SCFB       "GPU not supported by other drivers (UEFI)" \
+	2>&1 1>&5)
+retval=$?
+exec 5>&-
+[ $retval -ne $BSDDIALOG_OK ] && exit 1
+
+toinstall=""
+gpuconfig=""
+case $gpu in
+	DRM)
+		toinstall="drm-kmod mesa-gallium-va libva-utils libva-intel-media-driver"
+		gpuconfig="sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop kld_list+=\"i915kms amdgpu radeonkms\""
+		;;
+	Optimus)
+		optimus=1
+		;&
+	Intel)
+		toinstall="drm-kmod mesa-gallium-va libva-utils libva-intel-media-driver"
+		gpuconfig="sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop kld_list+=\"i915kms\""
+		;;
+	AMD)
+		toinstall="drm-kmod mesa-gallium-va libva-utils"
+		gpuconfig="sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop kld_list+=\"amdgpu\""
+		;;
+	Radeon)
+		toinstall="drm-kmod mesa-gallium-va libva-utils"
+		gpuconfig="sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop kld_list+=\"radeonkms\""
+		;;
+	VirtualBox)
+		toinstall="virtualbox-ose-additions-72"
+		gpuconfig="sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop vboxguest_enable=\"YES\"; "
+		gpuconfig="$gpuconfig sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop vboxservice_enable=\"YES\""
+		;;
+	VMware)
+		toinstall="xf86-video-vmware xf86-input-vmmouse open-vm-tools"
+		gpuconfig="sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop kld_list+=\"fusefs\""
+		;;
+	VESA)
+		toinstall="xf86-video-vesa"
+		gpuconfig="printf 'Section \"Device\"\n\tIdentifier \"Card0\"\n\tDriver \"vesa\"\nEndSection' > $XDRIVERFILE"
+		;;
+	SCFB)
+		toinstall="xf86-video-scfb"
+		gpuconfig="printf 'Section \"Device\"\n\tIdentifier \"Card0\"\n\tDriver \"scfb\"\nEndSection' > $XDRIVERFILE"
+		;;
+esac
+
+HELPGPU="$HELPGPU
+
+\ZbNVIDIA driver and supported GPUs\ZB:
+ * nvidia-drm-drm (580): \Zuhttps://www.nvidia.com/en-us/drivers/details/210651/\Zn
+ * nvidia-driver-470: \Zuhttps://www.nvidia.com/en-us/drivers/details/194639/\Zn
+ * nvidia-driver-390: \Zuhttps://www.nvidia.com/en-us/drivers/details/191122/\Zn
+ * nvidia-driver-340: \Zuhttps://www.nvidia.com/en-us/drivers/details/156167/\Zn
+ * nvidia-driver-304: \Zuhttps://www.nvidia.com/en-us/drivers/details/123712/\Zn"
+
+# TODO: test Optimus with recent GPU cards. Maybe ddd a dialog to suggest that
+# the user use NVIDIA rendering instead of Intel?
+if [ $gpu = NVIDIA -o $optimus ]; then
+	# 580 no in handbook.
+	items="nvidia-drm-kmod 'Proprietary driver version 580 for recent GPUs' \
+	nvidia-driver-470 'Old proprietary driver version 470' \
+	nvidia-driver-390 'Old proprietary driver version 390' \
+	nvidia-driver-340 'Old proprietary driver version 340' \
+	nvidia-driver-304 'Old proprietary driver version 304'"
+
+	exec 5>&1
+	gpu=$(echo $items | xargs -o bsddialog --backtitle "$OSNAME Installer" \
+		--title Desktop --ok-label Select --colors --hmsg "$HELPGPU" \
+		--menu "F1 to know your GPU and which driver supports it." \
+		0 0 0 \
+		2>&1 1>&5)
+	retval=$?
+	exec 5>&-
+	[ $retval -ne $BSDDIALOG_OK ] && exit 1
+
+	toinstall="$toinstall $gpu"
+	gpuconfig="${gpuconfig:+"$gpuconfig ; "}"
+	version=${gpu##nvidia-driver-}
+	case $version in
+		"nvidia-drm-kmod")
+			# Handbook: when nvidia-drm or nvidia-modeset?
+			gpuconfig="$gpuconfig sysrc kld_list+=\"nvidia-drm\""
+			bsddialog --backtitle "$OSNAME Installer" --title Desktop \
+				--yesno "Do you want to install extra packages \
+				to configure the GPU or to run tools that require \
+				compatibility with linux (example google-earth-pro)?" \
+				0 0
+			if [ $? -eq $BSDDIALOG_YES ]; then
+				toinstall="$toinstall nvidia-settings nvidia-xconfig nvidia-texture-tools"
+				toinstall="$toinstall linux-nvidia-libs"
+				gpuconfig="$gpuconfig ; sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop linux_enable=\"YES\""
+			fi
+			;;
+		470 | 390)
+			# Old hardware, 2011. Still useful?
+			gpuconfig="$gpuconfig sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop kld_list+=\"nvidia-modeset\""
+			;;
+		340 | 304)
+			# Old hardware. Still useful?
+			# 304 should not support OPTIMUS
+			# Handbook: 304 and 340 with the legacy sc(4) console
+			# driver, and a x11/xorg-server version prior to 1.20.
+			gpuconfig="$gpuconfig sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop kld_list+=\"nvidia\""
+			;;
+	esac
+	if [ $version = "nvidia-drm-kmod" -o $optimus ]; then
+		gpuconfig="$gpuconfig ; printf 'hw.nvidiadrm.modeset=\"1\"' >> $BSDINSTALL_TMPBOOT/loader.conf.desktop"
+	fi
+fi
+
+#### SECTION 3: Display Manager ####
+exec 5>&1
+displaymgr=$(bsddialog --backtitle "$OSNAME Installer" --title Desktop \
+	--ok-label Select --default-item SDDM \
+	--menu "Select the display manager to enter the nickname and password to
+log into the system:" \
+	0 0 0 \
+	Ly	"Text User Interface display manager" \
+	SDDM	"Graphical User Interface display manager" \
+	2>&1 1>&5)
+retval=$?
+exec 5>&-
+[ $retval -ne $BSDDIALOG_OK ] && exit 1
+
+LYINI="allow_empty_password = true
+animation = none
+asterisk = *
+auth_fails = 10
+auto_login_service = ly-autologin
+auto_login_session = null
+auto_login_user = null
+bg = 0x00000000
+border_fg = 0x0002
+box_title = null
+clear_password = false
+custom_sessions = /usr/local/etc/ly/custom-sessions
+default_input = login
+error_bg = 0x00000000
+error_fg = 0x01FF0000
+fg = 0x0002
+full_color = false
+hide_version_string = true
+initial_info_text = Welcome to FreeBSD
+input_len = 34
+lang = en
+login_defs_path = /etc/login.defs
+ly_log = /var/log/ly.log
+margin_box_h = 2
+margin_box_v = 1
+min_refresh_delta = 5
+path = null
+restart_cmd = /sbin/shutdown -r now
+restart_key = F2
+save = true
+service_name = ly
+session_log = .local/state/ly-session.log
+setup_cmd = /usr/local/etc/ly/setup.sh
+shutdown_cmd = /sbin/shutdown -p now
+shutdown_key = F1
+sleep_cmd = null
+sleep_key = F3
+start_cmd = null
+text_in_center = true
+waylandsessions = /usr/local/share/wayland-sessions
+x_cmd = /usr/local/bin/X
+xauth_cmd = /usr/local/bin/xauth
+xinitrc = ~/.xinitrc
+xsessions = /usr/local/share/xsessions"
+
+LYGETTYTAB='# Ly manager
+Ly:\\
+:lo=/usr/local/bin/ly_wrapper:\\
+:al=root:'
+
+case $displaymgr in
+	SDDM)
+		toinstall="$toinstall sddm"
+		dmgrconfig="sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop sddm_enable=\"YES\""
+		;;
+	Ly)
+		toinstall="$toinstall ly"
+		dmgrconfig="sed -i '' -e 's|ttyv1.*getty Pc.*|ttyv1 \"/usr/libexec/getty Ly\" xterm on secure|' $BSDINSTALL_CHROOT/etc/ttys"
+		dmgrconfig="$dmgrconfig ; echo \"$LYINI\" > $BSDINSTALL_CHROOT/usr/local/etc/ly/config.ini"
+		dmgrconfig="$dmgrconfig ; echo '$LYGETTYTAB' >> $BSDINSTALL_CHROOT/etc/gettytab"
+		;;
+esac
+
+#### SECTION 4: Installation ####
+# bsdinstall/scripts/firmware to know more about pkg and resolv.conf
+cp -f $BSDINSTALL_TMPETC/resolv.conf $BSDINSTALL_CHROOT/etc/
+ASSUME_ALWAYS_YES=yes pkg update
+exec 5>&1
+pkgerr=$(chroot $BSDINSTALL_CHROOT pkg install $toinstall kde plasma6-plasma wireplumber xorg 2>&1 1>&5)
+retval=$?
+exec 5>&-
+if [ $retval -ne 0 ]; then
+	bsddialog --backtitle "$OSNAME Installer" --title Desktop \
+	--msgbox "Error during package installation. Packages may currently be
+building, this is a common issue, try installing again later.\n\nReported error,
+$pkgerr" \
+	0 0
+	exit 1
+fi
+
+#### SECTION 5: Global Configuration ####
+bsddialog --backtitle "$OSNAME Installer" --title Desktop \
+	--infobox "Create and update configuration files" 0 0
+
+# Remove previous configurations to prevent duplicate or conflicting settings
+# if this script has already been executed via the finalconfig menu.
+rm -f $BSDINSTALL_TMPETC/rc.conf.desktop
+rm -f $XDRIVERFILE
+rm -f $BSDINSTALL_TMPBOOT/loader.conf.desktop
+sed -i '' '/^# Ly manager/,+3d' $BSDINSTALL_CHROOT/etc/gettytab
+cp $BSDINSTALL_CHROOT/usr/local/etc/ly/config.ini.sample $BSDINSTALL_CHROOT/usr/local/etc/ly/config.ini 2>/dev/null
+sed -i '' -e 's|ttyv1.*getty Ly.*|ttyv1\t"/usr/libexec/getty Pc"\t\txterm\tonifexists secure|' $BSDINSTALL_CHROOT/etc/ttys
+
+eval $gpuconfig
+sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop dbus_enable="YES"
+eval "$dmgrconfig"
+{
+	echo "# KDE setup";
+	echo "net.local.stream.recvspace=65536";
+	echo "net.local.stream.sendspace=65536";
+} > $BSDINSTALL_TMPETC/sysctl.conf.desktop
+
+# Useful for poweroff(8). Is this script the right place for this setting?
+if [ $gpu = VirtualBox -a $BOOTMETHOD = UEFI ]; then
+	{
+		echo "# VirtualBox setup";
+		echo "hw.efi.poweroff=0";
+	} > $BSDINSTALL_TMPBOOT/loader.conf.desktop
+fi
+
+#### SECTION 6: For User Configuration ####
+exec 5>&1
+users=$(echo ${USERS} | xargs -o bsddialog --backtitle "$OSNAME Installer" \
+	--title Desktop --ok-label Continue \
+	--checklist "SPACE to select the users enabled for the graphical environment:" \
+	0 0 0 \
+	2>&1 1>&5)
+retval=$?
+exec 5>&-
+[ $retval -ne $BSDDIALOG_OK ] && exit 1
+
+if [ $gpu != VESA -a $gpu != SCFB -a $gpu != VirtualBox ]; then
+	pw -R $BSDINSTALL_CHROOT groupmod video -m `echo "$users" | tr ' ' ','`
+fi
+
+if [ $gpu = VirtualBox ]; then
+	pw -R $BSDINSTALL_CHROOT groupmod wheel -m `echo "$users" | tr ' ' ','`
+fi
+
+gen_autostart_entry() {
+	cat <<EOF
+[Desktop Entry]
+Name=$1
+Comment=$2
+Exec=$3
+Terminal=false
+Type=Application
+X-GNOME-Autostart-Phase=Initialization
+X-KDE-autostart-phase=1
+Version=1.0
+$4
+EOF
+}
+
+for u in $users; do
+	user_home="$(pw -R $BSDINSTALL_CHROOT usershow ${u} | awk -F: '{print substr($(NF-1), 2)}')"
+	user_config_dir="$BSDINSTALL_CHROOT/${user_home}/.config"
+	mkdir -p "${user_config_dir}/autostart"
+	gen_autostart_entry \
+		'PipeWire Media System' \
+		'Start the PipeWire Media System' \
+		pipewire > "${user_config_dir}/autostart/pipewire.desktop"
+	gen_autostart_entry \
+		'PipeWire PulseAudio replacement' \
+		'Start the PulseAudio-compatible PipeWire daemon' \
+		pipewire-pulse > "${user_config_dir}/autostart/pipewire-pulse.desktop"
+	gen_autostart_entry \
+		'PulseAudio Sound System' \
+		'Start the PulseAudio Sound System' \
+		'start-pulseaudio-x11' \
+		'Hidden=true' > "${user_config_dir}/autostart/pulseaudio.desktop"
+	chroot $BSDINSTALL_CHROOT chown -R ${u}:${u} "${user_home}/.config"
+done
+
+#### SECTION 7: Success Message ####
+users=`echo "$users" | sed 's/ /, /g'`
+
+finalmsg="Desktop installation completed.\n\n
+The ${displaymgr} display manager will start automatically and allow login at
+the next startup. The enabled users with configured settings are:
+\Zb${users}\Zb."
+
+if [ $gpu = VirtualBox ]; then
+	finalmsg="$finalmsg\n\n\
+\ZbTIP\ZB. VirtualBox setting: select VBoxSVGA as graphics controller, and
+disable 3D acceleration."
+fi
+
+bsddialog --backtitle "$OSNAME Installer" --title Desktop --colors \
+	--msgbox "$finalmsg" 0 0
