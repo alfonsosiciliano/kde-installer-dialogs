@@ -42,7 +42,7 @@ GPU drivers, Xorg, KDE Plasma, and a display manager now, and have them start
 automatically at the next system reboot?\n\nPlease note this is an experimental
 feature."
 
-# This is a script for inexperienced users, so add  a warning in case the
+# This is a script for inexperienced users, so add a warning in case the
 # CURRENT is installed by mistake.
 if [ $VERSION = CURRENT ]; then
 	question="$question You are installing FreeBSD CURRENT, the development
