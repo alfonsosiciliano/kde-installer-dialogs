@@ -53,7 +53,7 @@ bsddialog --backtitle "$OSNAME Installer" --title Desktop --colors \
 	--yesno  "$question" 0 0
 [ $? -eq $BSDDIALOG_YES ] || exit 1
 
-if [ -z "$USERS" ]; then
+if [ ! -z "$USERS" ]; then
 	bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 	--ok-label Exit \
 	--msgbox "No created user accounts were found on this system.
@@ -178,24 +178,25 @@ case "$gpu" in
 		;;
 esac
 
-HELPGPU="\ZbCheck the driver\ZB that supports your GPU at: \
-\Zuhttps://www.nvidia.com/en-us/drivers/unix/\ZU
-$HELPGPU"
-
 # TODO: test Optimus with recent GPU cards. Maybe add a dialog to suggest that
 # the user use NVIDIA rendering instead of Intel?
 if [ "$gpu" = NVIDIA ] || [ $optimus ]; then
 	# 580 no in handbook.
-	items="nvidia-drm-kmod 'Proprietary driver version 580 for recent GPUs'
-	nvidia-driver-470 'Old proprietary driver version 470'
-	nvidia-driver-390 'Old proprietary driver version 390'
-	nvidia-driver-340 'Old proprietary driver version 340'
-	nvidia-driver-304 'Old proprietary driver version 304'"
+	items="nvidia-driver-devel-610 '610 development driver for latest NVIDIA GPUs'
+	nvidia-driver-595 '595 driver for recent NVIDIA GPUs'
+	nvidia-driver-580 '580 driver for recent NVIDIA GPUs'
+	nvidia-driver-470 '470 legacy driver for older NVIDIA GPUs'
+	nvidia-driver-390 '390 legacy driver for older NVIDIA GPUs'
+	nvidia-driver-340 '340 legacy driver for older NVIDIA GPUs'
+	nvidia-driver-304 '304 legacy driver for very old NVIDIA GPUs'"
 
 	exec 5>&1
 	gpu=$(echo $items | xargs -o bsddialog --backtitle "$OSNAME Installer" \
 		--title Desktop --ok-label Select --colors --hmsg "$HELPGPU" \
-		--menu "F1 to know your GPU and which driver supports it." \
+		--default-item nvidia-driver-595 --no-names \
+		--menu "F1 to know your GPU and which driver supports it.
+		    \nCheck the driver that supports your GPU at:
+		    https://www.nvidia.com/en-us/drivers/unix/" \
 		0 0 0 \
 		2>&1 1>&5)
 	retval=$?
