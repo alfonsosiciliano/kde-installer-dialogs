@@ -182,7 +182,7 @@ HELPGPU="\ZbCheck the driver\ZB that supports your GPU at: \
 \Zuhttps://www.nvidia.com/en-us/drivers/unix/\ZU
 $HELPGPU"
 
-# TODO: test Optimus with recent GPU cards. Maybe ddd a dialog to suggest that
+# TODO: test Optimus with recent GPU cards. Maybe add a dialog to suggest that
 # the user use NVIDIA rendering instead of Intel?
 if [ "$gpu" = NVIDIA ] || [ $optimus ]; then
 	# 580 no in handbook.
