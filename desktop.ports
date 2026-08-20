@@ -73,53 +73,41 @@ HELPGPU="\ZbSystem firmware boot method\ZB: $BOOTMETHOD
 \ZbDetected firmware package\ZB: $PKGGPU"
 # end F1 help message
 
-# Is this check really necessary? Non-amd64 users are probably experienced,
-# so they already know what and how to do to install a graphical environment.
-if [ "$ARCH" != amd64 ] && [ "$ARCH" != aarch64 ] && [ "$ARCH" != armv7 ]; then
-	bsddialog --backtitle "$OSNAME Installer" --title Desktop \
-		--ok-label Exit \
-		--msgbox "Sorry no GPU driver for the $ARCH architecture." 0 0
-	exit 1
-elif [ "$ARCH" = aarch64 ] || [ "$ARCH" = armv7 ]; then
-	[ "$BOOTMETHOD" = BIOS ] && defaultgpu=VESA || defaultgpu=SCFB
-	msggpu="Select \Zb$defaultgpu\ZB because it is the only driver\
-	supported with $ARCH and $BOOTMETHOD."
-elif [ "$VM" = vbox ] && [ "$VERSION" = CURRENT ]; then
-	msggpu="Detected $OSNAME CURRENT in a VirtualBox virtual machine."
-	[ "$BOOTMETHOD" = BIOS ] && defaultgpu=VESA || defaultgpu=SCFB
-	msggpu="$msggpu Select \Zb$defaultgpu\ZB to avoid a possible kernel panic."
+[ "$BOOTMETHOD" = BIOS ] && defaultgpu=VESA || defaultgpu=SCFB
+if [ "$VM" = vbox ] && [ "$VERSION" = CURRENT ]; then
+	msggpu="Detected CURRENT release in a VirtualBox virtual machine."
+	msggpu="$msggpu Select \Zb$defaultgpu\ZB to avoid a possible kernel panic"
 elif [ "$VM" = vbox ]; then
 	defaultgpu=VirtualBox
-	msggpu="Autodetected \ZbVirtualBox\ZB virtual machine,"
+	msggpu="Autodetected \ZbVirtualBox\ZB virtual machine"
 elif [ "$VM" = vmware ]; then
 	defaultgpu=VMware
-	msggpu="Autodetected \ZbVMware\ZB virtual machine,"
+	msggpu="Autodetected \ZbVMware\ZB virtual machine"
 elif [ "${GPU#*NVIDIA}" != "$GPU" ] && [ "${PKGGPU#*intel}" != "$PKGGPU" ]; then
 	defaultgpu=Optimus
-	msggpu="Autodetected a NVIDIA GPU and an Intel GPU, probably \ZbOptimus\ZB,"
+	msggpu="Autodetected a NVIDIA GPU and an Intel GPU, probably \ZbOptimus\ZB"
 elif [ "${GPU#*NVIDIA}" != "$GPU" ]; then
 	defaultgpu=NVIDIA
-	msggpu="Autodetected a \ZbNVIDIA\ZB GPU,"
+	msggpu="Autodetected a \ZbNVIDIA\ZB GPU"
 elif [ "${PKGGPU#*intel}" != "$PKGGPU" ]; then
 	defaultgpu=Intel
-	msggpu="Autodetected an \ZbIntel\ZB GPU,"
+	msggpu="Autodetected an \ZbIntel\ZB GPU"
 elif [ "${PKGGPU#*amd}" != "$PKGGPU" ]; then
 	defaultgpu=AMD
 	msggpu="Autodetected an \ZbAMD\ZB GPU"
 elif [ "${PKGGPU#*radeon}" != "$PKGGPU" ]; then
 	defaultgpu=Radeon
-	msggpu="Autodetected a \ZbRadeon\ZB GPU,"
+	msggpu="Autodetected a \ZbRadeon\ZB GPU"
 else
 	msggpu="No graphics driver was detected for your GPU,"
-	[ "$BOOTMETHOD" = BIOS ] && defaultgpu=VESA || defaultgpu=SCFB
-	msggpu="$msggpu select \Zb$defaultgpu\ZB because your system uses $BOOTMETHOD."
+	msggpu="$msggpu select \Zb$defaultgpu\ZB because your system uses $BOOTMETHOD"
 fi
 
 exec 5>&1
 gpu=$(bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 	--ok-label Select --default-item "$defaultgpu" \
 	--colors --hmsg "$HELPGPU" --item-depth \
-	--menu "Select your graphics card.\n$msggpu F1 to know more." \
+	--menu "Select your graphics card.\n${msggpu}. F1 to know more." \
 	0 0 0 \
 	0 DRM        "Intel and AMD Metaport" \
 	2 Intel      "Intel APUs starting with HD3000 / Sandy Bridge" \
