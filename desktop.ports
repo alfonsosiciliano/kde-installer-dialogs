@@ -14,7 +14,6 @@ BSDCFG_SHARE="/usr/share/bsdconfig"
 : "${BSDDIALOG_OK=0}"
 : "${BSDDIALOG_YES=$BSDDIALOG_OK}"
 
-XDRIVERFILE="$BSDINSTALL_CHROOT/usr/local/etc/X11/xorg.conf.d/20-generic-driver.conf"
 BOOTMETHOD=`sysctl -n machdep.bootmethod`
 USERS=`pw -R "$BSDINSTALL_CHROOT" usershow -a | awk -F":" '
         $NF != "/usr/sbin/nologin" && $3 >= 1000 && $3 < 32000 {print $1 " \""$8"\" on"}
@@ -115,6 +114,7 @@ else
 	[ "$BOOTMETHOD" = BIOS ] && defaultgpu=VESA || defaultgpu=SCFB
 	msggpu="$msggpu select \Zb$defaultgpu\ZB because your system uses $BOOTMETHOD."
 fi
+
 exec 5>&1
 gpu=$(bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 	--ok-label Select --default-item "$defaultgpu" \
@@ -136,105 +136,43 @@ retval=$?
 exec 5>&-
 [ $retval -ne $BSDDIALOG_OK ] && exit 1
 
-toinstall=""
-gpuconfig=""
-optimus=
-case "$gpu" in
-	DRM)
-		toinstall="drm-kmod mesa-gallium-va libva-utils libva-intel-media-driver"
-		gpuconfig="sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop kld_list+=\"i915kms amdgpu radeonkms\""
-		;;
-	Optimus)
-		optimus=1
-		;&
-	Intel)
-		toinstall="drm-kmod mesa-gallium-va libva-utils libva-intel-media-driver"
-		gpuconfig="sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop kld_list+=\"i915kms\""
-		;;
-	AMD)
-		toinstall="drm-kmod mesa-gallium-va libva-utils"
-		gpuconfig="sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop kld_list+=\"amdgpu\""
-		;;
-	Radeon)
-		toinstall="drm-kmod mesa-gallium-va libva-utils"
-		gpuconfig="sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop kld_list+=\"radeonkms\""
-		;;
-	VirtualBox)
-		toinstall="virtualbox-ose-additions-72"
-		gpuconfig="sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop vboxguest_enable=\"YES\"; "
-		gpuconfig="$gpuconfig sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop vboxservice_enable=\"YES\""
-		;;
-	VMware)
-		toinstall="xf86-video-vmware xf86-input-vmmouse open-vm-tools"
-		gpuconfig="sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop kld_list+=\"fusefs\""
-		;;
-	VESA)
-		toinstall="xf86-video-vesa"
-		gpuconfig="printf 'Section \"Device\"\n\tIdentifier \"Card0\"\n\tDriver \"vesa\"\nEndSection' > $XDRIVERFILE"
-		;;
-	SCFB)
-		toinstall="xf86-video-scfb"
-		gpuconfig="printf 'Section \"Device\"\n\tIdentifier \"Card0\"\n\tDriver \"scfb\"\nEndSection' > $XDRIVERFILE"
-		;;
-esac
+toinstall=bsdinstall-gpu-$(printf '%s\n' "$gpu" | tr '[:upper:]' '[:lower:]')
 
 # TODO: test Optimus with recent GPU cards. Maybe add a dialog to suggest that
 # the user use NVIDIA rendering instead of Intel?
-if [ "$gpu" = NVIDIA ] || [ $optimus ]; then
+if [ "$gpu" = NVIDIA ] || [ "$gpu" = Optimus ]; then
 	# 580 no in handbook.
-	items="nvidia-driver-devel-610 '610 development driver for latest NVIDIA GPUs'
-	nvidia-driver-595 '595 driver for recent NVIDIA GPUs'
-	nvidia-driver-580 '580 driver for recent NVIDIA GPUs'
-	nvidia-driver-470 '470 legacy driver for older NVIDIA GPUs'
-	nvidia-driver-390 '390 legacy driver for older NVIDIA GPUs'
-	nvidia-driver-340 '340 legacy driver for older NVIDIA GPUs'
-	nvidia-driver-304 '304 legacy driver for very old NVIDIA GPUs'"
-
 	exec 5>&1
-	gpu=$(echo $items | xargs -o bsddialog --backtitle "$OSNAME Installer" \
+	gpu=$(bsddialog --backtitle "$OSNAME Installer" \
 		--title Desktop --ok-label Select --colors --hmsg "$HELPGPU" \
 		--default-item nvidia-driver-595 --no-names \
 		--menu "F1 to know your GPU and which driver supports it.
 		    \nCheck the driver that supports your GPU at:
 		    https://www.nvidia.com/en-us/drivers/unix/" \
 		0 0 0 \
+		nvidia-610 "610 development driver for latest NVIDIA GPUs"
+		nvidia-595 "595 driver for recent NVIDIA GPUs"
+		nvidia-580 "580 driver for recent NVIDIA GPUs"
+		nvidia-470 "470 legacy driver for older NVIDIA GPUs"
+		nvidia-390 "390 legacy driver for older NVIDIA GPUs"
+		nvidia-340 "340 legacy driver for older NVIDIA GPUs"
+		nvidia-304 "304 legacy driver for very old NVIDIA GPUs"
 		2>&1 1>&5)
 	retval=$?
 	exec 5>&-
 	[ $retval -ne $BSDDIALOG_OK ] && exit 1
 
-	toinstall="$toinstall $gpu"
-	gpuconfig="${gpuconfig:+"$gpuconfig ; "}"
-	version="${gpu##nvidia-driver-}"
-	case "$version" in
-		nvidia-drm-kmod)
-			# Handbook: when nvidia-drm or nvidia-modeset?
-			gpuconfig="$gpuconfig sysrc kld_list+=\"nvidia-drm\""
-			bsddialog --backtitle "$OSNAME Installer" --title Desktop \
-				--yesno "Do you want to install extra packages \
-				to configure the GPU or to run tools that require \
-				compatibility with linux (example google-earth-pro)?" \
-				0 0
-			if [ $? -eq $BSDDIALOG_YES ]; then
-				toinstall="$toinstall nvidia-settings nvidia-xconfig nvidia-texture-tools"
-				toinstall="$toinstall linux-nvidia-libs"
-				gpuconfig="$gpuconfig ; sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop linux_enable=\"YES\""
-			fi
-			;;
-		470 | 390)
-			# Old hardware, 2011. Still useful?
-			gpuconfig="$gpuconfig sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop kld_list+=\"nvidia-modeset\""
-			;;
-		340 | 304)
-			# Old hardware. Still useful?
-			# 304 should not support OPTIMUS
-			# Handbook: 304 and 340 with the legacy sc(4) console
-			# driver, and a x11/xorg-server version prior to 1.20.
-			gpuconfig="$gpuconfig sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop kld_list+=\"nvidia\""
-			;;
-	esac
-	if [ "$version" = "nvidia-drm-kmod" ] || [ $optimus ]; then
-		gpuconfig="$gpuconfig ; printf 'hw.nvidiadrm.modeset=\"1\"' >> $BSDINSTALL_TMPBOOT/loader.conf.desktop"
+	toinstall="$toinstall bsdinstall-gpu-$gpu"
+
+	if [ "${gpu##nvidia-}" -ge 580 ]; then
+		bsddialog --backtitle "$OSNAME Installer" --title Desktop \
+		    --yesno "Do you want to install extra packages \
+		    to configure the GPU or to run tools that require \
+		    compatibility with linux (example google-earth-pro)?" \
+		    0 0 \
+		if [ $? -eq $BSDDIALOG_YES ]; then
+			toinstall="$toinstall bsdinstall-gpu-nvidia-addons"
+		fi
 	fi
 fi
 
@@ -285,16 +223,7 @@ sed -i '' '/^# Ly manager/,+3d' "$BSDINSTALL_CHROOT/etc/gettytab"
 cp "$BSDINSTALL_CHROOT/usr/local/etc/ly/config.ini.sample" "$BSDINSTALL_CHROOT/usr/local/etc/ly/config.ini" 2>/dev/null
 sed -i '' -e 's|ttyv1.*getty Ly.*|ttyv1\t"/usr/libexec/getty Pc"\t\txterm\tonifexists secure|' "$BSDINSTALL_CHROOT/etc/ttys"
 
-eval "$gpuconfig"
 sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop dbus_enable="YES"
-
-# Useful for poweroff(8). Is this script the right place for this setting?
-if [ "$gpu" = VirtualBox ] && [ "$BOOTMETHOD" = UEFI ]; then
-	{
-		echo "# VirtualBox setup";
-		echo "hw.efi.poweroff=0";
-	} > $BSDINSTALL_TMPBOOT/loader.conf.desktop
-fi
 
 #### SECTION 6: For User Configuration ####
 exec 5>&1
