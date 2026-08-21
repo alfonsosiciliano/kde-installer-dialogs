@@ -2,6 +2,12 @@
 
 Copyright (C) 2025 - 2026 The [The FreeBSD Foundation](https://freebsdfoundation.org/).
 
+Important
+---------
+
+This project is currently being rewritten.
+Please contact me before using or testing it, opening an issue, or submitting a merge request.
+Thank you!
 
 Introduction
 ------------
