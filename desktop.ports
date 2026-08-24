@@ -22,6 +22,30 @@ VM=`sysctl -n kern.vm_guest`
 ARCH=`uname -p`
 VERSION=`uname -r | cut -d- -f2-`
 
+pkg_install () {
+	local packages=$*
+
+	[ $# -eq 0 ] && return
+
+	# bsdinstall/scripts/firmware to know more about pkg and resolv.conf
+	cp -f $BSDINSTALL_TMPETC/resolv.conf "$BSDINSTALL_CHROOT/etc/"
+	ASSUME_ALWAYS_YES=yes pkg update
+	exec 5>&1
+	pkgerr=$(chroot "$BSDINSTALL_CHROOT" pkg install $packages 2>&1 1>&5)
+	retval=$?
+	exec 5>&-
+	if [ $retval -ne 0 ]; then
+		bsddialog --backtitle "$OSNAME Installer" --title Desktop \
+		--msgbox "Error during package installation.
+		Packages may currently be building, this is a common issue, try
+		installing again later.\n\n
+		Reported error, $pkgerr" \
+		0 0
+		exit 1
+	fi
+
+}
+
 ####
 # 1. Yes-No question and checks.
 # 2. Select GPU driver.
@@ -173,21 +197,7 @@ dm=$(printf '%s\n' "$displaymanager" | tr '[:upper:]' '[:lower:]')
 toinstall="$toinstall bsdinstall-$dm"
 
 #### SECTION 4: Installation ####
-# bsdinstall/scripts/firmware to know more about pkg and resolv.conf
-cp -f $BSDINSTALL_TMPETC/resolv.conf "$BSDINSTALL_CHROOT/etc/"
-ASSUME_ALWAYS_YES=yes pkg update
-exec 5>&1
-pkgerr=$(chroot "$BSDINSTALL_CHROOT" pkg install $toinstall kde plasma6-plasma wireplumber xorg 2>&1 1>&5)
-retval=$?
-exec 5>&-
-if [ $retval -ne 0 ]; then
-	bsddialog --backtitle "$OSNAME Installer" --title Desktop \
-	--msgbox "Error during package installation. Packages may currently be
-building, this is a common issue, try installing again later.\n\nReported error,
-$pkgerr" \
-	0 0
-	exit 1
-fi
+pkg_install $toinstall kde plasma6-plasma wireplumber xorg
 
 #### SECTION 5: Global Configuration ####
 bsddialog --backtitle "$OSNAME Installer" --title Desktop \
