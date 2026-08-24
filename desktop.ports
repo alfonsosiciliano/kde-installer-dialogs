@@ -172,7 +172,8 @@ if [ "$gpu" = NVIDIA ] || [ "$gpu" = Optimus ]; then
 		    --yesno "Do you want to install extra packages \
 		    to configure the GPU or to run tools that require \
 		    compatibility with linux (example google-earth-pro)?" \
-		    0 0 \
+		    0 0
+
 		if [ $? -eq $BSDDIALOG_YES ]; then
 			toinstall="$toinstall bsdinstall-gpu-nvidia-addons"
 		fi
