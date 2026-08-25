@@ -18,7 +18,7 @@ BSDCFG_SHARE="/usr/share/bsdconfig"
 XDRIVERFILE="$BSDINSTALL_CHROOT/usr/local/etc/X11/xorg.conf.d/20-generic-driver.conf"
 BOOTMETHOD=`sysctl -n machdep.bootmethod`
 USERS=`pw -R "$BSDINSTALL_CHROOT" usershow -a | awk -F":" '
-        $NF != "/usr/sbin/nologin" && $3 >= 1000 && $3 < 32000 {print $1 " \""$8"\" on"}
+	$NF != "/usr/sbin/nologin" && $3 >= 1000 && $3 < 32000 {print $1 " \""$8"\" on"}
 ' | sort`
 VM=`sysctl -n kern.vm_guest`
 ARCH=`uname -p`
