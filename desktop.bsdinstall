@@ -11,13 +11,15 @@
 BSDCFG_SHARE="/usr/share/bsdconfig"
 . $BSDCFG_SHARE/common.subr || exit 1
 
-: ${BSDDIALOG_OK=0}
-: ${BSDDIALOG_YES=$BSDDIALOG_OK}
-: ${BSDDIALOG_NO=1}
+: "${BSDDIALOG_OK=0}"
+: "${BSDDIALOG_YES=$BSDDIALOG_OK}"
+: "${BSDDIALOG_NO=1}"
 
-XDRIVERFILE=$BSDINSTALL_CHROOT/usr/local/etc/X11/xorg.conf.d/20-generic-driver.conf
+XDRIVERFILE="$BSDINSTALL_CHROOT/usr/local/etc/X11/xorg.conf.d/20-generic-driver.conf"
 BOOTMETHOD=`sysctl -n machdep.bootmethod`
-USERS=`pw -R $BSDINSTALL_CHROOT usershow -a | awk -F":" '$NF != "/usr/sbin/nologin" && $3 > 999 {print $1 " \""$8"\" on"}' | sort`
+USERS=`pw -R "$BSDINSTALL_CHROOT" usershow -a | awk -F":" '
+	$NF != "/usr/sbin/nologin" && $3 >= 1000 && $3 < 32000 {print $1 " \""$8"\" on"}
+' | sort`
 VM=`sysctl -n kern.vm_guest`
 ARCH=`uname -p`
 VERSION=`uname -r | cut -d- -f2-`
@@ -50,13 +52,7 @@ fi
 
 bsddialog --backtitle "$OSNAME Installer" --title Desktop --colors \
 	--yesno  "$question" 0 0
-[ $? -ne $BSDDIALOG_YES ] && exit 1
-
-if [ -z "`hostname`" ]; then
-	bsddialog --backtitle "$OSNAME Installer" --title Desktop \
-	--ok-label Exit --msgbox "Please set a hostname." 0 0
-	exit 1
-fi
+[ $? -eq $BSDDIALOG_YES ] || exit 1
 
 if [ -z "$USERS" ]; then
 	bsddialog --backtitle "$OSNAME Installer" --title Desktop \
@@ -72,7 +68,7 @@ fi
 
 #### SECTION 2: Select GPU ####
 PKGGPU=`fwget -n -q | grep gpu`
-GPU=`pciconf -lv | grep -A 4 vga`
+GPU=`pciconf -lv | awk '/class=0x03/,/subclass/'`
 # F1 help message
 HELPGPU="\ZbSystem firmware boot method\ZB: $BOOTMETHOD
 \ZbGPU\ZB: $GPU
@@ -81,26 +77,26 @@ HELPGPU="\ZbSystem firmware boot method\ZB: $BOOTMETHOD
 
 # Is this check really necessary? Non-amd64 users are probably experienced,
 # so they already know what and how to do to install a graphical environment.
-if [ $ARCH != amd64 -a $ARCH != aarch64 -a $ARCH != armv7 ]; then
+if [ "$ARCH" != amd64 ] && [ "$ARCH" != aarch64 ] && [ "$ARCH" != armv7 ]; then
 	bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 		--ok-label Exit \
 		--msgbox "Sorry no GPU driver for the $ARCH architecture." 0 0
 	exit 1
-elif [ $ARCH = aarch64 -o $ARCH = armv7 ]; then
-	[ $BOOTMETHOD == BIOS ] && defaultgpu=VESA || defaultgpu=SCFB
+elif [ "$ARCH" = aarch64 ] || [ "$ARCH" = armv7 ]; then
+	[ "$BOOTMETHOD" = BIOS ] && defaultgpu=VESA || defaultgpu=SCFB
 	msggpu="Select \Zb$defaultgpu\ZB because it is the only driver\
 	supported with $ARCH and $BOOTMETHOD."
-elif [ $VM = vbox -a $VERSION = CURRENT ]; then
+elif [ "$VM" = vbox ] && [ "$VERSION" = CURRENT ]; then
 	msggpu="Detected $OSNAME CURRENT in a VirtualBox virtual machine."
-	[ $BOOTMETHOD == BIOS ] && defaultgpu=VESA || defaultgpu=SCFB
+	[ "$BOOTMETHOD" = BIOS ] && defaultgpu=VESA || defaultgpu=SCFB
 	msggpu="$msggpu Select \Zb$defaultgpu\ZB to avoid a possible kernel panic."
-elif [ $VM = vbox ]; then
+elif [ "$VM" = vbox ]; then
 	defaultgpu=VirtualBox
 	msggpu="Autodetected \ZbVirtualBox\ZB virtual machine,"
-elif [ $VM = vmware ]; then
+elif [ "$VM" = vmware ]; then
 	defaultgpu=VMware
 	msggpu="Autodetected \ZbVMware\ZB virtual machine,"
-elif [ "${GPU#*NVIDIA}" != "$GPU" -a "${PKGGPU#*intel}" != "$PKGGPU" ]; then
+elif [ "${GPU#*NVIDIA}" != "$GPU" ] && [ "${PKGGPU#*intel}" != "$PKGGPU" ]; then
 	defaultgpu=Optimus
 	msggpu="Autodetected a NVIDIA GPU and an Intel GPU, probably \ZbOptimus\ZB,"
 elif [ "${GPU#*NVIDIA}" != "$GPU" ]; then
@@ -117,12 +113,12 @@ elif [ "${PKGGPU#*radeon}" != "$PKGGPU" ]; then
 	msggpu="Autodetected a \ZbRadeon\ZB GPU,"
 else
 	msggpu="No graphics driver was detected for your GPU,"
-	[ $BOOTMETHOD == BIOS ] && defaultgpu=VESA || defaultgpu=SCFB
+	[ "$BOOTMETHOD" = BIOS ] && defaultgpu=VESA || defaultgpu=SCFB
 	msggpu="$msggpu select \Zb$defaultgpu\ZB because your system uses $BOOTMETHOD."
 fi
 exec 5>&1
 gpu=$(bsddialog --backtitle "$OSNAME Installer" --title Desktop \
-	--ok-label Select --default-item $defaultgpu \
+	--ok-label Select --default-item "$defaultgpu" \
 	--colors --hmsg "$HELPGPU" --item-depth \
 	--menu "Select your graphics card.\n$msggpu F1 to know more." \
 	0 0 0 \
@@ -143,7 +139,8 @@ exec 5>&-
 
 toinstall=""
 gpuconfig=""
-case $gpu in
+optimus=
+case "$gpu" in
 	DRM)
 		toinstall="drm-kmod mesa-gallium-va libva-utils libva-intel-media-driver"
 		gpuconfig="sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop kld_list+=\"i915kms amdgpu radeonkms\""
@@ -193,12 +190,12 @@ HELPGPU="$HELPGPU
 
 # TODO: test Optimus with recent GPU cards. Maybe ddd a dialog to suggest that
 # the user use NVIDIA rendering instead of Intel?
-if [ $gpu = NVIDIA -o $optimus ]; then
+if [ "$gpu" = NVIDIA ] || [ $optimus ]; then
 	# 580 no in handbook.
-	items="nvidia-drm-kmod 'Proprietary driver version 580 for recent GPUs' \
-	nvidia-driver-470 'Old proprietary driver version 470' \
-	nvidia-driver-390 'Old proprietary driver version 390' \
-	nvidia-driver-340 'Old proprietary driver version 340' \
+	items="nvidia-drm-kmod 'Proprietary driver version 580 for recent GPUs'
+	nvidia-driver-470 'Old proprietary driver version 470'
+	nvidia-driver-390 'Old proprietary driver version 390'
+	nvidia-driver-340 'Old proprietary driver version 340'
 	nvidia-driver-304 'Old proprietary driver version 304'"
 
 	exec 5>&1
@@ -213,9 +210,9 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 
 	toinstall="$toinstall $gpu"
 	gpuconfig="${gpuconfig:+"$gpuconfig ; "}"
-	version=${gpu##nvidia-driver-}
-	case $version in
-		"nvidia-drm-kmod")
+	version="${gpu##nvidia-driver-}"
+	case "$version" in
+		nvidia-drm-kmod)
 			# Handbook: when nvidia-drm or nvidia-modeset?
 			gpuconfig="$gpuconfig sysrc kld_list+=\"nvidia-drm\""
 			bsddialog --backtitle "$OSNAME Installer" --title Desktop \
@@ -241,7 +238,7 @@ if [ $gpu = NVIDIA -o $optimus ]; then
 			gpuconfig="$gpuconfig sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop kld_list+=\"nvidia\""
 			;;
 	esac
-	if [ $version = "nvidia-drm-kmod" -o $optimus ]; then
+	if [ "$version" = "nvidia-drm-kmod" ] || [ $optimus ]; then
 		gpuconfig="$gpuconfig ; printf 'hw.nvidiadrm.modeset=\"1\"' >> $BSDINSTALL_TMPBOOT/loader.conf.desktop"
 	fi
 fi
@@ -310,7 +307,7 @@ Ly:\\
 :lo=/usr/local/bin/ly_wrapper:\\
 :al=root:'
 
-case $displaymgr in
+case "$displaymgr" in
 	SDDM)
 		toinstall="$toinstall sddm"
 		dmgrconfig="sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop sddm_enable=\"YES\""
@@ -325,10 +322,10 @@ esac
 
 #### SECTION 4: Installation ####
 # bsdinstall/scripts/firmware to know more about pkg and resolv.conf
-cp -f $BSDINSTALL_TMPETC/resolv.conf $BSDINSTALL_CHROOT/etc/
+cp -f $BSDINSTALL_TMPETC/resolv.conf "$BSDINSTALL_CHROOT/etc/"
 ASSUME_ALWAYS_YES=yes pkg update
 exec 5>&1
-pkgerr=$(chroot $BSDINSTALL_CHROOT pkg install $toinstall kde plasma6-plasma wireplumber xorg 2>&1 1>&5)
+pkgerr=$(chroot "$BSDINSTALL_CHROOT" pkg install $toinstall kde plasma6-plasma wireplumber xorg 2>&1 1>&5)
 retval=$?
 exec 5>&-
 if [ $retval -ne 0 ]; then
@@ -349,21 +346,16 @@ bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 rm -f $BSDINSTALL_TMPETC/rc.conf.desktop
 rm -f $XDRIVERFILE
 rm -f $BSDINSTALL_TMPBOOT/loader.conf.desktop
-sed -i '' '/^# Ly manager/,+3d' $BSDINSTALL_CHROOT/etc/gettytab
-cp $BSDINSTALL_CHROOT/usr/local/etc/ly/config.ini.sample $BSDINSTALL_CHROOT/usr/local/etc/ly/config.ini 2>/dev/null
-sed -i '' -e 's|ttyv1.*getty Ly.*|ttyv1\t"/usr/libexec/getty Pc"\t\txterm\tonifexists secure|' $BSDINSTALL_CHROOT/etc/ttys
+sed -i '' '/^# Ly manager/,+3d' "$BSDINSTALL_CHROOT/etc/gettytab"
+cp "$BSDINSTALL_CHROOT/usr/local/etc/ly/config.ini.sample" "$BSDINSTALL_CHROOT/usr/local/etc/ly/config.ini" 2>/dev/null
+sed -i '' -e 's|ttyv1.*getty Ly.*|ttyv1\t"/usr/libexec/getty Pc"\t\txterm\tonifexists secure|' "$BSDINSTALL_CHROOT/etc/ttys"
 
-eval $gpuconfig
+eval "$gpuconfig"
 sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop dbus_enable="YES"
 eval "$dmgrconfig"
-{
-	echo "# KDE setup";
-	echo "net.local.stream.recvspace=65536";
-	echo "net.local.stream.sendspace=65536";
-} > $BSDINSTALL_TMPETC/sysctl.conf.desktop
 
 # Useful for poweroff(8). Is this script the right place for this setting?
-if [ $gpu = VirtualBox -a $BOOTMETHOD = UEFI ]; then
+if [ "$gpu" = VirtualBox ] && [ "$BOOTMETHOD" = UEFI ]; then
 	{
 		echo "# VirtualBox setup";
 		echo "hw.efi.poweroff=0";
@@ -372,7 +364,7 @@ fi
 
 #### SECTION 6: For User Configuration ####
 exec 5>&1
-users=$(echo ${USERS} | xargs -o bsddialog --backtitle "$OSNAME Installer" \
+users=$(echo $USERS | xargs -o bsddialog --backtitle "$OSNAME Installer" \
 	--title Desktop --ok-label Continue \
 	--checklist "SPACE to select the users enabled for the graphical environment:" \
 	0 0 0 \
@@ -381,58 +373,58 @@ retval=$?
 exec 5>&-
 [ $retval -ne $BSDDIALOG_OK ] && exit 1
 
-if [ $gpu != VESA -a $gpu != SCFB -a $gpu != VirtualBox ]; then
-	pw -R $BSDINSTALL_CHROOT groupmod video -m `echo "$users" | tr ' ' ','`
+if [ "$gpu" != VESA ] && [ "$gpu" != SCFB ] && [ "$gpu" != VirtualBox ]; then
+	pw -R "$BSDINSTALL_CHROOT" groupmod video -m `echo "$users" | tr ' ' ','`
 fi
 
 if [ $gpu = VirtualBox ]; then
-	pw -R $BSDINSTALL_CHROOT groupmod wheel -m `echo "$users" | tr ' ' ','`
+	pw -R "$BSDINSTALL_CHROOT" groupmod wheel -m `echo "$users" | tr ' ' ','`
 fi
 
 gen_autostart_entry() {
-	cat <<EOF
-[Desktop Entry]
-Name=$1
-Comment=$2
-Exec=$3
-Terminal=false
-Type=Application
-X-GNOME-Autostart-Phase=Initialization
-X-KDE-autostart-phase=1
-Version=1.0
-$4
-EOF
+	cat <<-EOF
+	[Desktop Entry]
+	Name=$1
+	Comment=$2
+	Exec=$3
+	Terminal=false
+	Type=Application
+	X-GNOME-Autostart-Phase=Initialization
+	X-KDE-autostart-phase=1
+	Version=1.0
+	$4
+	EOF
 }
 
 for u in $users; do
-	user_home="$(pw -R $BSDINSTALL_CHROOT usershow ${u} | awk -F: '{print substr($(NF-1), 2)}')"
-	user_config_dir="$BSDINSTALL_CHROOT/${user_home}/.config"
-	mkdir -p "${user_config_dir}/autostart"
+	user_home=$(pw -R "$BSDINSTALL_CHROOT" usershow $u | awk -F: '{print substr($(NF-1), 2)}')
+	user_config_dir="$BSDINSTALL_CHROOT/$user_home/.config"
+	mkdir -p "$user_config_dir/autostart"
 	gen_autostart_entry \
 		'PipeWire Media System' \
 		'Start the PipeWire Media System' \
-		pipewire > "${user_config_dir}/autostart/pipewire.desktop"
+		pipewire > "$user_config_dir/autostart/pipewire.desktop"
 	gen_autostart_entry \
 		'PipeWire PulseAudio replacement' \
 		'Start the PulseAudio-compatible PipeWire daemon' \
-		pipewire-pulse > "${user_config_dir}/autostart/pipewire-pulse.desktop"
+		pipewire-pulse > "$user_config_dir/autostart/pipewire-pulse.desktop"
 	gen_autostart_entry \
 		'PulseAudio Sound System' \
 		'Start the PulseAudio Sound System' \
 		'start-pulseaudio-x11' \
-		'Hidden=true' > "${user_config_dir}/autostart/pulseaudio.desktop"
-	chroot $BSDINSTALL_CHROOT chown -R ${u}:${u} "${user_home}/.config"
+		'Hidden=true' > "$user_config_dir/autostart/pulseaudio.desktop"
+	chroot "$BSDINSTALL_CHROOT" chown -R "$u:$u" "$user_home/.config"
 done
 
 #### SECTION 7: Success Message ####
 users=`echo "$users" | sed 's/ /, /g'`
 
 finalmsg="Desktop installation completed.\n\n
-The ${displaymgr} display manager will start automatically and allow login at
+The $displaymgr display manager will start automatically and allow login at
 the next startup. The enabled users with configured settings are:
-\Zb${users}\Zb."
+\Zb$users\Zb."
 
-if [ $gpu = VirtualBox ]; then
+if [ "$gpu" = VirtualBox ]; then
 	finalmsg="$finalmsg\n\n\
 \ZbTIP\ZB. VirtualBox setting: select VBoxSVGA as graphics controller, and
 disable 3D acceleration."
