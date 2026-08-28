@@ -31,7 +31,9 @@ pkg_install () {
 	cp -f $BSDINSTALL_TMPETC/resolv.conf "$BSDINSTALL_CHROOT/etc/"
 	ASSUME_ALWAYS_YES=yes pkg update
 	exec 5>&1
-	pkgerr=$(chroot "$BSDINSTALL_CHROOT" pkg install $packages 2>&1 1>&5)
+	# WIP
+	#pkgerr=$(chroot "$BSDINSTALL_CHROOT" pkg install $packages 2>&1 1>&5)
+	pkgerr=$(pkg install $packages 2>&1 1>&5)
 	retval=$?
 	exec 5>&-
 	if [ $retval -ne 0 ]; then
@@ -66,17 +68,9 @@ feature." \
 	0 0
 [ $? -eq $BSDDIALOG_YES ] || exit 1
 
-if [ ! -z "$USERS" ]; then
-	bsddialog --backtitle "$OSNAME Installer" --title Desktop \
-	--ok-label Exit \
-	--msgbox "No created user accounts were found on this system.
-Although it is possible to run a graphical environment as the root user,
-it is strongly discouraged for security reasons.\n\n
-Please create at least one regular user account before launching this module
-to install a graphical desktop environment." \
-	0 0
-	exit 1
-fi
+pkg_install bsdinstall-desktop
+
+bsdinstall-desktop-checks || exit 1
 
 #### SECTION 2: Select GPU ####
 PKGGPU=`fwget -n -q | grep gpu`
