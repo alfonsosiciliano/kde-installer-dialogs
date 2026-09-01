@@ -22,17 +22,10 @@ ARCH=`uname -p`
 VERSION=`uname -r | cut -d- -f2-`
 
 pkg_install () {
-	local packages=$*
-
-	[ $# -eq 0 ] && return
-
-	# bsdinstall/scripts/firmware to know more about pkg and resolv.conf
-	cp -f $BSDINSTALL_TMPETC/resolv.conf "$BSDINSTALL_CHROOT/etc/"
-	ASSUME_ALWAYS_YES=yes pkg update
 	exec 5>&1
 	# WIP
-	#pkgerr=$(chroot "$BSDINSTALL_CHROOT" pkg install $packages 2>&1 1>&5)
-	pkgerr=$(pkg install $packages 2>&1 1>&5)
+	#pkgerr=$(chroot "$BSDINSTALL_CHROOT" pkg install $* 2>&1 1>&5)
+	pkgerr=$(pkg install $* 2>&1 1>&5)
 	retval=$?
 	exec 5>&-
 	if [ $retval -ne 0 ]; then
@@ -43,10 +36,9 @@ again later." \
 		0 0
 		exit 1
 	fi
-
 }
 
-#### SECTION 1: Yes-No question and Checks ####
+#### SECTION 1: Yes-No question, install tools, and checks ####
 bsddialog --backtitle "$OSNAME Installer" --title Desktop --colors \
 	--yesno "$OSNAME provides a variety of graphical environments that can
 be easily installed through ports and packages. Refer to the $OSNAME Handbook
@@ -57,13 +49,14 @@ feature." \
 	0 0
 [ $? -eq $BSDDIALOG_YES ] || exit 1
 
-pkg_install bsdinstall-desktop
+# bsdinstall/scripts/firmware to know more about pkg and resolv.conf
+cp -f $BSDINSTALL_TMPETC/resolv.conf "$BSDINSTALL_CHROOT/etc/"
+ASSUME_ALWAYS_YES=yes pkg update
+pkg_install bsdinstall-desktop bsdinstall-gpu
 
 bsdinstall-desktop-checks || exit 1
 
 #### SECTION 2: Select GPU ####
-pkg_install bsdinstall-gpu
-
 exec 5>&1
 gpu=$(bsdinstall-gpu 2>&1 1>&5)
 retval=$?
