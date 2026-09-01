@@ -46,16 +46,6 @@ again later." \
 
 }
 
-####
-# 1. Yes-No question and checks.
-# 2. Select GPU driver.
-# 3. Select display manager.
-# 4. Installation.
-# 5. Global configuration.
-# 6. Configuration for users.
-# 7. Success message.
-####
-
 #### SECTION 1: Yes-No question and Checks ####
 bsddialog --backtitle "$OSNAME Installer" --title Desktop --colors \
 	--yesno "$OSNAME provides a variety of graphical environments that can
