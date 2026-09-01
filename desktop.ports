@@ -49,7 +49,7 @@ feature." \
 	0 0
 [ $? -eq $BSDDIALOG_YES ] || exit 1
 
-# bsdinstall/scripts/firmware to know more about pkg and resolv.conf
+# bsdinstall/scripts/firmware to know more about pkg(8) and resolv.conf(5)
 cp -f $BSDINSTALL_TMPETC/resolv.conf "$BSDINSTALL_CHROOT/etc/"
 ASSUME_ALWAYS_YES=yes pkg update
 pkg_install bsdinstall-desktop bsdinstall-gpu
