@@ -17,9 +17,6 @@ BSDCFG_SHARE="/usr/share/bsdconfig"
 USERS=`pw -R "$BSDINSTALL_CHROOT" usershow -a | awk -F":" '
         $NF != "/usr/sbin/nologin" && $3 >= 1000 && $3 < 32000 {print $1 " \""$8"\" on"}
 ' | sort`
-VM=`sysctl -n kern.vm_guest`
-ARCH=`uname -p`
-VERSION=`uname -r | cut -d- -f2-`
 
 pkg_install () {
 	exec 5>&1
@@ -155,7 +152,7 @@ The $displaymanager display manager will start automatically and allow login at
 the next startup. The enabled users with configured settings are:
 \Zb$users\Zb."
 
-if [ "$gpu" = VirtualBox ]; then
+if [ "`sysctl -n kern.vm_guest`" = VirtualBox ]; then
 	finalmsg="$finalmsg\n\n\
 \ZbTIP\ZB. VirtualBox setting: select VBoxSVGA as graphics controller, and
 disable 3D acceleration."
