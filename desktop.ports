@@ -14,7 +14,6 @@ BSDCFG_SHARE="/usr/share/bsdconfig"
 : "${BSDDIALOG_OK=0}"
 : "${BSDDIALOG_YES=$BSDDIALOG_OK}"
 
-BOOTMETHOD=`sysctl -n machdep.bootmethod`
 USERS=`pw -R "$BSDINSTALL_CHROOT" usershow -a | awk -F":" '
         $NF != "/usr/sbin/nologin" && $3 >= 1000 && $3 < 32000 {print $1 " \""$8"\" on"}
 ' | sort`
@@ -73,105 +72,17 @@ pkg_install bsdinstall-desktop
 bsdinstall-desktop-checks || exit 1
 
 #### SECTION 2: Select GPU ####
-PKGGPU=`fwget -n -q | grep gpu`
-GPU=`pciconf -lv | awk '/class=0x03/,/subclass/'`
-# F1 help message
-HELPGPU="\ZbSystem firmware boot method\ZB: $BOOTMETHOD
-\ZbGPU\ZB: $GPU
-\ZbDetected firmware package\ZB: $PKGGPU"
-# end F1 help message
-
-[ "$BOOTMETHOD" = BIOS ] && defaultgpu=VESA || defaultgpu=SCFB
-if [ "$VM" = vbox ] && [ "$VERSION" = CURRENT ]; then
-	msggpu="Detected CURRENT release in a VirtualBox virtual machine."
-	msggpu="$msggpu Select \Zb$defaultgpu\ZB to avoid a possible kernel panic"
-elif [ "$VM" = vbox ]; then
-	defaultgpu=VirtualBox
-	msggpu="Autodetected \ZbVirtualBox\ZB virtual machine"
-elif [ "$VM" = vmware ]; then
-	defaultgpu=VMware
-	msggpu="Autodetected \ZbVMware\ZB virtual machine"
-elif [ "${GPU#*NVIDIA}" != "$GPU" ] && [ "${PKGGPU#*intel}" != "$PKGGPU" ]; then
-	defaultgpu=Optimus
-	msggpu="Autodetected a NVIDIA GPU and an Intel GPU, probably \ZbOptimus\ZB"
-elif [ "${GPU#*NVIDIA}" != "$GPU" ]; then
-	defaultgpu=NVIDIA
-	msggpu="Autodetected a \ZbNVIDIA\ZB GPU"
-elif [ "${PKGGPU#*intel}" != "$PKGGPU" ]; then
-	defaultgpu=Intel
-	msggpu="Autodetected an \ZbIntel\ZB GPU"
-elif [ "${PKGGPU#*amd}" != "$PKGGPU" ]; then
-	defaultgpu=AMD
-	msggpu="Autodetected an \ZbAMD\ZB GPU"
-elif [ "${PKGGPU#*radeon}" != "$PKGGPU" ]; then
-	defaultgpu=Radeon
-	msggpu="Autodetected a \ZbRadeon\ZB GPU"
-else
-	msggpu="No graphics driver was detected for your GPU,"
-	msggpu="$msggpu select \Zb$defaultgpu\ZB because your system uses $BOOTMETHOD"
-fi
+pkg_install bsdinstall-gpu
 
 exec 5>&1
-gpu=$(bsddialog --backtitle "$OSNAME Installer" --title Desktop \
-	--ok-label Select --default-item "$defaultgpu" \
-	--colors --hmsg "$HELPGPU" --item-depth \
-	--menu "Select your graphics card.\n${msggpu}. F1 to know more." \
-	0 0 0 \
-	0 DRM        "Intel and AMD Metaport" \
-	2 Intel      "Intel APUs starting with HD3000 / Sandy Bridge" \
-	2 AMD        "AMD GPUs starting with HD7000 / Tahiti" \
-	2 Radeon     "Older AMD GPUs (EFI boot should be disabled)" \
-	0 NVIDIA     "Proprietary driver" \
-	2 Optimus    "Nvidia Optimus and Intel GPU" \
-	0 VirtualBox "Oracle VirtualBox virtual machine" \
-	0 VMware     "Broadcom virtual machine" \
-	0 VESA       "GPU not supported by other drivers (BIOS)" \
-	0 SCFB       "GPU not supported by other drivers (UEFI)" \
-	2>&1 1>&5)
+gpu=$(bsdinstall-gpu 2>&1 1>&5)
 retval=$?
 exec 5>&-
-[ $retval -ne $BSDDIALOG_OK ] && exit 1
 
-toinstall=bsdinstall-gpu-$(printf '%s\n' "$gpu" | tr '[:upper:]' '[:lower:]')
+[ $retval -ne 0 ] && exit 1
 
-# TODO: test Optimus with recent GPU cards. Maybe add a dialog to suggest that
-# the user use NVIDIA rendering instead of Intel?
-if [ "$gpu" = NVIDIA ] || [ "$gpu" = Optimus ]; then
-	# 580 no in handbook.
-	exec 5>&1
-	gpu=$(bsddialog --backtitle "$OSNAME Installer" \
-		--title Desktop --ok-label Select --colors --hmsg "$HELPGPU" \
-		--default-item nvidia-driver-595 --no-names \
-		--menu "F1 to know your GPU and which driver supports it.
-		    \nCheck the driver that supports your GPU at:
-		    https://www.nvidia.com/en-us/drivers/unix/" \
-		0 0 0 \
-		nvidia-610 "610 development driver for latest NVIDIA GPUs"
-		nvidia-595 "595 driver for recent NVIDIA GPUs"
-		nvidia-580 "580 driver for recent NVIDIA GPUs"
-		nvidia-470 "470 legacy driver for older NVIDIA GPUs"
-		nvidia-390 "390 legacy driver for older NVIDIA GPUs"
-		nvidia-340 "340 legacy driver for older NVIDIA GPUs"
-		nvidia-304 "304 legacy driver for very old NVIDIA GPUs"
-		2>&1 1>&5)
-	retval=$?
-	exec 5>&-
-	[ $retval -ne $BSDDIALOG_OK ] && exit 1
-
-	toinstall="$toinstall bsdinstall-gpu-$gpu"
-
-	if [ "${gpu##nvidia-}" -ge 580 ]; then
-		bsddialog --backtitle "$OSNAME Installer" --title Desktop \
-		    --yesno "Do you want to install extra packages \
-		    to configure the GPU or to run tools that require \
-		    compatibility with linux (example google-earth-pro)?" \
-		    0 0
-
-		if [ $? -eq $BSDDIALOG_YES ]; then
-			toinstall="$toinstall bsdinstall-gpu-nvidia-addons"
-		fi
-	fi
-fi
+toinstall=${gpu%%:*}
+toconfig=${gpu#*:}
 
 #### SECTION 3: Display Manager ####
 exec 5>&1
