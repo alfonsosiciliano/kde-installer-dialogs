@@ -49,7 +49,7 @@ feature." \
 # bsdinstall/scripts/firmware to know more about pkg(8) and resolv.conf(5)
 cp -f $BSDINSTALL_TMPETC/resolv.conf "$BSDINSTALL_CHROOT/etc/"
 ASSUME_ALWAYS_YES=yes pkg update
-pkg_install bsdinstall-desktop bsdinstall-gpu
+pkg_install bsdinstall-desktop bsdinstall-gpu bsdinstal-dm
 
 bsdinstall-desktop-checks || exit 1
 
@@ -66,20 +66,14 @@ toconfig=${gpu#*:}
 
 #### SECTION 3: Display Manager ####
 exec 5>&1
-displaymanager=$(bsddialog --backtitle "$OSNAME Installer" --title Desktop \
-	--ok-label Select --default-item SDDM \
-	--menu "Select the display manager to enter the nickname and password to
-log into the system:" \
-	0 0 0 \
-	Ly	"Text User Interface display manager" \
-	SDDM	"Graphical User Interface display manager" \
-	2>&1 1>&5)
+dm=$(bsdinstall-dm 2>&1 1>&5)
 retval=$?
 exec 5>&-
-[ $retval -ne $BSDDIALOG_OK ] && exit 1
 
-dm=$(printf '%s\n' "$displaymanager" | tr '[:upper:]' '[:lower:]')
-toinstall="$toinstall bsdinstall-$dm"
+[ $retval -ne 0 ] && exit 1
+
+toinstall="$toinstall ${dm%%:*}"
+toconfig="$toconfig ${dm#*:}"
 
 #### SECTION 4: Installation ####
 pkg_install $toinstall kde plasma6-plasma wireplumber xorg
