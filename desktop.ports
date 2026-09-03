@@ -11,12 +11,7 @@
 BSDCFG_SHARE="/usr/share/bsdconfig"
 . $BSDCFG_SHARE/common.subr || exit 1
 
-: "${BSDDIALOG_OK=0}"
-: "${BSDDIALOG_YES=$BSDDIALOG_OK}"
-
-USERS=`pw -R "$BSDINSTALL_CHROOT" usershow -a | awk -F":" '
-        $NF != "/usr/sbin/nologin" && $3 >= 1000 && $3 < 32000 {print $1 " \""$8"\" on"}
-' | sort`
+: "${BSDDIALOG_YES=0}"
 
 pkg_install () {
 	exec 5>&1
@@ -130,7 +125,7 @@ for u in $users; do
 done
 
 #### SECTION 7: Success Message ####
-users=`echo "$users" | sed 's/ /, /g'`
+users=`echo "$BSDINSTALL_USERS" | sed 's/ /, /g'`
 
 finalmsg="Desktop installation completed.\n\n
 The $displaymanager display manager will start automatically and allow login at
