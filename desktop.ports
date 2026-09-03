@@ -94,14 +94,6 @@ exec 5>&-
 
 export BSDINSTALL_USERS
 
-if [ "$gpu" != VESA ] && [ "$gpu" != SCFB ] && [ "$gpu" != VirtualBox ]; then
-	pw -R "$BSDINSTALL_CHROOT" groupmod video -m `echo "$users" | tr ' ' ','`
-fi
-
-if [ $gpu = VirtualBox ]; then
-	pw -R "$BSDINSTALL_CHROOT" groupmod wheel -m `echo "$users" | tr ' ' ','`
-fi
-
 gen_autostart_entry() {
 	cat <<-EOF
 	[Desktop Entry]
