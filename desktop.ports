@@ -86,14 +86,11 @@ sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop dbus_enable="YES"
 
 #### SECTION 6: For User Configuration ####
 exec 5>&1
-users=$(echo $USERS | xargs -o bsddialog --backtitle "$OSNAME Installer" \
-	--title Desktop --ok-label Continue \
-	--checklist "SPACE to select the users enabled for the graphical environment:" \
-	0 0 0 \
-	2>&1 1>&5)
+users=$(bsdinstall-desktop-users 2>&1 1>&5)
 retval=$?
 exec 5>&-
-[ $retval -ne $BSDDIALOG_OK ] && exit 1
+
+[ $retval -ne 0 ] && exit 1
 
 if [ "$gpu" != VESA ] && [ "$gpu" != SCFB ] && [ "$gpu" != VirtualBox ]; then
 	pw -R "$BSDINSTALL_CHROOT" groupmod video -m `echo "$users" | tr ' ' ','`
