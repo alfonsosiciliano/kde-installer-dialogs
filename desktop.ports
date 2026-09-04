@@ -44,7 +44,7 @@ feature." \
 # bsdinstall/scripts/firmware to know more about pkg(8) and resolv.conf(5)
 cp -f $BSDINSTALL_TMPETC/resolv.conf "$BSDINSTALL_CHROOT/etc/"
 ASSUME_ALWAYS_YES=yes pkg update
-pkg_install bsdinstall-desktop bsdinstall-gpu bsdinstall-dm
+pkg_install bsdinstall-desktop bsdinstall-gpu bsdinstall-dm bsdinstall-de
 
 bsdinstall-desktop-checks || exit 1
 
@@ -71,13 +71,11 @@ toinstall="$toinstall ${dm%%:*}"
 toconfig="$toconfig ${dm#*:}"
 
 #### SECTION 4: Installation ####
-pkg_install $toinstall kde plasma6-plasma wireplumber xorg
+pkg_install $toinstall xorg `bsdinstall-de`
 
 #### SECTION 5: Global Configuration ####
 bsddialog --backtitle "$OSNAME Installer" --title Desktop \
 	--infobox "Create and update configuration files" 0 0
-
-sysrc -f $BSDINSTALL_TMPETC/rc.conf.desktop dbus_enable="YES"
 
 #### SECTION 6: For User Configuration ####
 exec 5>&1
