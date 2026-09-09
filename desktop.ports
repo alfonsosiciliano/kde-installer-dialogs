@@ -48,52 +48,38 @@ pkg_install bsdinstall-desktop bsdinstall-gpu bsdinstall-dm bsdinstall-de
 
 bsdinstall-desktop-checks || exit 1
 
-#### SECTION 2: Select GPU ####
+#### SECTION 2: GPU ####
 exec 5>&1
 gpu=$(bsdinstall-gpu 2>&1 1>&5)
 retval=$?
 exec 5>&-
-
 [ $retval -ne 0 ] && exit 1
-
-toinstall=${gpu%%:*}
-toconfig=${gpu#*:}
 
 #### SECTION 3: Display Manager ####
 exec 5>&1
 dm=$(bsdinstall-dm 2>&1 1>&5)
 retval=$?
 exec 5>&-
-
 [ $retval -ne 0 ] && exit 1
 
-toinstall="$toinstall ${dm%%:*}"
-toconfig="$toconfig ${dm#*:}"
-
-#### SECTION 4: Installation ####
-pkg_install $toinstall xorg `bsdinstall-de`
-
-#### SECTION 5: Global Configuration ####
-bsddialog --backtitle "$OSNAME Installer" --title Desktop \
-	--infobox "Create and update configuration files" 0 0
-
-#### SECTION 6: For User Configuration ####
+#### SECTION 4: Users ####
 exec 5>&1
 BSDINSTALL_USERS=$(bsdinstall-desktop-users 2>&1 1>&5)
 retval=$?
 exec 5>&-
-
 [ $retval -ne 0 ] && exit 1
 
 export BSDINSTALL_USERS
 
-#### SECTION 7: Success Message ####
+#### SECTION 5: Installation ####
+pkg_install $gpu xorg `bsdinstall-de` $dm
+
+#### SECTION 6: Success Message ####
 users=`echo "$BSDINSTALL_USERS" | sed 's/ /, /g'`
 
 finalmsg="Desktop installation completed.\n\n
-The $displaymanager display manager will start automatically and allow login at
-the next startup. The enabled users with configured settings are:
-\Zb$users\Zb."
+A display manager will start automatically and allow login at the next startup.
+The enabled users with configured settings are: \Zb$users\Zb."
 
 if [ "`sysctl -n kern.vm_guest`" = VirtualBox ]; then
 	finalmsg="$finalmsg\n\n\
