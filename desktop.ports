@@ -32,8 +32,8 @@ again later." \
 
 #### SECTION 1: Yes-No question, install tools, and checks ####
 bsddialog --backtitle "$OSNAME Installer" --title Desktop --colors \
-	--yesno "$OSNAME provides a variety of graphical environments that can
-be easily installed through ports and packages. Refer to the $OSNAME Handbook
+    --yesno "$OSNAME provides a variety of graphical environments that can be
+easily installed through ports and packages. Refer to the $OSNAME Handbook
 available at \Zuhttps://docs.freebsd.org\Zn.\n\nWould you like to install the
 GPU drivers, Xorg, KDE Plasma, and a display manager now, and have them start
 automatically at the next system reboot?\n\nPlease note this is an experimental
@@ -88,4 +88,4 @@ disable 3D acceleration."
 fi
 
 bsddialog --backtitle "$OSNAME Installer" --title Desktop --colors \
-	--msgbox "$finalmsg" 0 0
+    --msgbox "$finalmsg" 0 0
