@@ -87,41 +87,6 @@ exec 5>&-
 
 export BSDINSTALL_USERS
 
-gen_autostart_entry() {
-	cat <<-EOF
-	[Desktop Entry]
-	Name=$1
-	Comment=$2
-	Exec=$3
-	Terminal=false
-	Type=Application
-	X-GNOME-Autostart-Phase=Initialization
-	X-KDE-autostart-phase=1
-	Version=1.0
-	$4
-	EOF
-}
-
-for u in $users; do
-	user_home=$(pw -R "$BSDINSTALL_CHROOT" usershow $u | awk -F: '{print substr($(NF-1), 2)}')
-	user_config_dir="$BSDINSTALL_CHROOT/$user_home/.config"
-	mkdir -p "$user_config_dir/autostart"
-	gen_autostart_entry \
-		'PipeWire Media System' \
-		'Start the PipeWire Media System' \
-		pipewire > "$user_config_dir/autostart/pipewire.desktop"
-	gen_autostart_entry \
-		'PipeWire PulseAudio replacement' \
-		'Start the PulseAudio-compatible PipeWire daemon' \
-		pipewire-pulse > "$user_config_dir/autostart/pipewire-pulse.desktop"
-	gen_autostart_entry \
-		'PulseAudio Sound System' \
-		'Start the PulseAudio Sound System' \
-		'start-pulseaudio-x11' \
-		'Hidden=true' > "$user_config_dir/autostart/pulseaudio.desktop"
-	chroot "$BSDINSTALL_CHROOT" chown -R "$u:$u" "$user_home/.config"
-done
-
 #### SECTION 7: Success Message ####
 users=`echo "$BSDINSTALL_USERS" | sed 's/ /, /g'`
 
