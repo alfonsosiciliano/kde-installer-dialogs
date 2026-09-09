@@ -22,10 +22,10 @@ pkg_install () {
 	exec 5>&-
 	if [ $retval -ne 0 ]; then
 		bsddialog --backtitle "$OSNAME Installer" --title Desktop \
-		--msgbox "Error during package installation: $pkgerr\n\n
+		    --msgbox "Error during package installation: $pkgerr\n\n
 Packages may currently be building, this is a common issue, try installing
 again later." \
-		0 0
+		    0 0
 		exit 1
 	fi
 }
