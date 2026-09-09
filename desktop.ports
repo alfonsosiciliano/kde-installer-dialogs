@@ -81,7 +81,7 @@ finalmsg="Desktop installation completed.\n\n
 A display manager will start automatically and allow login at the next startup.
 The enabled users with configured settings are: \Zb$users\Zb."
 
-if [ "`sysctl -n kern.vm_guest`" = VirtualBox ]; then
+if [ "`sysctl -n kern.vm_guest`" = vbox ]; then
 	finalmsg="$finalmsg\n\n\
 \ZbTIP\ZB. VirtualBox setting: select VBoxSVGA as graphics controller, and
 disable 3D acceleration."
