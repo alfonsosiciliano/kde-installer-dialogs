@@ -71,7 +71,7 @@ exec 5>&-
 
 export BSDINSTALL_USERS
 
-#### SECTION 5: Installation ####
+#### SECTION 5: Installation and configuration ####
 pkg_install $gpu xorg `bsdinstall-de` $dm bsdinstall-desktop-audio
 # Remove tools
 pkg delete bsdinstall-*
