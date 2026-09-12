@@ -38,7 +38,7 @@ available at \Zuhttps://docs.freebsd.org\Zn.\n\nWould you like to install the
 GPU drivers, Xorg, KDE Plasma, and a display manager now, and have them start
 automatically at the next system reboot?\n\nPlease note this is an experimental
 feature." \
-	0 0
+    0 0
 [ $? -eq $BSDDIALOG_YES ] || exit 1
 
 # bsdinstall/scripts/firmware to know more about pkg(8) and resolv.conf(5)
