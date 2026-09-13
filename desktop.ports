@@ -74,7 +74,7 @@ export BSDINSTALL_USERS
 #### SECTION 5: Installation and configuration ####
 pkg_install $gpu xorg `bsdinstall-de` $dm bsdinstall-desktop-audio
 # Remove tools
-pkg delete bsdinstall-*
+pkg delete -g bsdinstall-*
 
 #### SECTION 6: Success Message ####
 users=`echo "$BSDINSTALL_USERS" | sed 's/ /, /g'`
