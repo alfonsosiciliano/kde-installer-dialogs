@@ -7,6 +7,11 @@
 # This software was developed by Alfonso Sabato Siciliano
 # <asiciliano@FreeBSD.org> under sponsorship from the FreeBSD Foundation.
 
+###
+### This script is the old version for bsdinstall,
+### the new version is desktop.ports.
+###
+
 # Include only for $OSNAME
 BSDCFG_SHARE="/usr/share/bsdconfig"
 . $BSDCFG_SHARE/common.subr || exit 1
