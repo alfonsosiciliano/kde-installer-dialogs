@@ -81,7 +81,7 @@ users=`echo "$BSDINSTALL_USERS" | sed 's/ /, /g'`
 
 finalmsg="Desktop installation completed.\n\n
 A display manager will start automatically and allow login at the next startup.
-The enabled users with configured settings are: \Zb$users\Zb."
+The enabled users with configured settings are: \Zb$users\ZB."
 
 if [ "`sysctl -n kern.vm_guest`" = vbox ]; then
 	finalmsg="$finalmsg\n\n\
