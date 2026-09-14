@@ -15,8 +15,7 @@ BSDCFG_SHARE="/usr/share/bsdconfig"
 
 pkg_install () {
 	exec 5>&1
-	# WIP
-	#pkgerr=$(chroot "$BSDINSTALL_CHROOT" pkg install $* 2>&1 1>&5)
+	# XXX pkgerr=$(chroot "$BSDINSTALL_CHROOT" pkg install $* 2>&1 1>&5)
 	pkgerr=$(pkg install $* 2>&1 1>&5)
 	retval=$?
 	exec 5>&-
