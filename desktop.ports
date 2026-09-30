@@ -30,7 +30,7 @@ again later." \
 }
 
 #### SECTION 1: Yes-No question, install tools, and checks ####
-bsddialog --backtitle "$OSNAME Installer" --title Desktop --colors \
+bsddialog --backtitle "$OSNAME Installer" --title Desktop --text-escape \
     --yesno "$OSNAME provides a variety of graphical environments that can be
 easily installed through ports and packages. Refer to the $OSNAME Handbook
 available at \Zuhttps://docs.freebsd.org\Zn.\n\nWould you like to install the
@@ -88,5 +88,5 @@ if [ "$(sysctl -n kern.vm_guest)" = vbox ]; then
 disable 3D acceleration."
 fi
 
-bsddialog --backtitle "$OSNAME Installer" --title Desktop --colors \
+bsddialog --backtitle "$OSNAME Installer" --title Desktop --text-escape \
     --msgbox "$finalmsg" 0 0
